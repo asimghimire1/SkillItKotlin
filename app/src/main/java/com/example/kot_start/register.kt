@@ -343,9 +343,9 @@ fun RegisterBody() {
 
                 Text(
                     modifier = Modifier.fillMaxWidth().clickable{
-                        val intent = Intent(context,
-                            login::class.java)
-                        context.startActivity(intent)
+//                        val intent = Intent(context,
+//                            login::class.java)
+//                        context.startActivity(intent)
                     },
                     textAlign = TextAlign.Center,
                     text = buildAnnotatedString {

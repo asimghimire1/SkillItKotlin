@@ -97,8 +97,8 @@ fun dashboardBody(){
     },
         floatingActionButton = {
             FloatingActionButton(onClick ={
-                val intent= Intent(context,AddProduct::class.java)
-                context.startActivity(intent)
+//                val intent= Intent(context,AddProduct::class.java)
+//                context.startActivity(intent)
             }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
             }
@@ -131,11 +131,11 @@ fun dashboardBody(){
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> HomeScreen()
+//                0 -> HomeScreen()
                 1 -> AppScreen()
                 2 -> DeviceScreen()
-                3 -> ProfileScreen()
-                else -> HomeScreen()
+//                3 -> ProfileScreen()
+//                else -> HomeScreen()
             }
         }
     }

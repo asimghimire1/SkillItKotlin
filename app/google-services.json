@@ -1,14 +1,33 @@
 {
   "project_info": {
-    "project_number": "640292600854",
-    "firebase_url": "https://kotstart-default-rtdb.firebaseio.com",
-    "project_id": "kotstart",
-    "storage_bucket": "kotstart.firebasestorage.app"
+    "project_number": "973132085800",
+    "firebase_url": "https://skillit4-default-rtdb.firebaseio.com",
+    "project_id": "skillit4",
+    "storage_bucket": "skillit4.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:640292600854:android:190210c19e6b29c1648937",
+        "mobilesdk_app_id": "1:973132085800:android:5e4f21872aa842b924931d",
+        "android_client_info": {
+          "package_name": "com.example.firstone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuyuwLEvnblhi8l1lFR2qeO-EAW1uIP5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973132085800:android:a91c35b74e85dd0624931d",
         "android_client_info": {
           "package_name": "com.example.kot_start"
         }
@@ -16,7 +35,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBCZhabY6khTEgh0X4CghcX0y3ls_8N_Po"
+          "current_key": "AIzaSyBuyuwLEvnblhi8l1lFR2qeO-EAW1uIP5Y"
         }
       ],
       "services": {
