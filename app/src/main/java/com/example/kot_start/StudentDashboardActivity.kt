@@ -132,7 +132,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                 // Main Content
                 when (selectedIndex) {
                     0 -> StudentHomeScreen(viewModel)
-                    1 -> StudentAppsScreen(viewModel)
+                    1 -> ExploreScreen(viewModel)
                     2 -> StudentMyLearningScreen(viewModel)
                     3 -> StudentBidsScreen(viewModel)
                     else -> StudentHomeScreen(viewModel)
