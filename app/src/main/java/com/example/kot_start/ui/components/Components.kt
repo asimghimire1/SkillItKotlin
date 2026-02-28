@@ -7,6 +7,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,8 +26,12 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SkillItHeader(
     walletBalance: String = "NPR 0",
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    onAddCreditsClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {}
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -58,17 +65,79 @@ fun SkillItHeader(
                 )
             }
 
-            IconButton(
-                onClick = onNotificationClick,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Filled.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.White
-                )
+                IconButton(
+                    onClick = onNotificationClick,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                ) {
+                    Icon(
+                        Icons.Filled.Notifications,
+                        contentDescription = "Notifications",
+                        tint = Color.White
+                    )
+                }
+
+                Box {
+                    IconButton(
+                        onClick = { showMenu = !showMenu },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                    ) {
+                        Icon(
+                            Icons.Filled.MoreVert,
+                            contentDescription = "Menu",
+                            tint = Color.White
+                        )
+                    }
+
+                    // Dropdown Menu
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Add Credits",
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        color = Color.Black
+                                    )
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                onAddCreditsClick()
+                            }
+                        )
+
+                        Divider()
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Logout",
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        color = Color(0xFFEA2A33),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                onLogoutClick()
+                            }
+                        )
+                    }
+                }
             }
         }
     }

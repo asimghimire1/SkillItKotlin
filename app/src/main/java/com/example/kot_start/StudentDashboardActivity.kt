@@ -108,73 +108,87 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
     data class NavItem(val title: String, val icon: Int)
     
     var selectedIndex by remember { mutableStateOf(0) }
+    var showAddCreditsScreen by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F6F6))
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Custom Header with wallet balance from ViewModel
-            com.example.kot_start.ui.components.SkillItHeader(
-                walletBalance = "NPR ${String.format("%.0f", stats.credits)}",
-                onNotificationClick = { /* Handle notification */ }
-            )
-
-            // Show loading indicator
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    androidx.compose.material3.CircularProgressIndicator()
-                }
-            } else {
-                // Main Content
-                when (selectedIndex) {
-                    0 -> StudentHomeScreen(viewModel)
-                    1 -> ExploreScreen(viewModel)
-                    2 -> StudentMyLearningScreen(viewModel)
-                    3 -> StudentBidsScreen(viewModel)
-                    else -> StudentHomeScreen(viewModel)
-                }
+    if (showAddCreditsScreen) {
+        AddCreditsScreen(
+            currentBalance = stats.credits,
+            onBackClick = { showAddCreditsScreen = false },
+            onProceedClick = { amount, method ->
+                // Handle payment processing
+                showAddCreditsScreen = false
             }
-        }
-
-        // Custom Bottom Navigation Pill with Scroll
+        )
+    } else {
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp, start = 16.dp, end = 16.dp)
-                .fillMaxWidth()
+                .fillMaxSize()
+                .background(Color(0xFFF8F6F6))
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(50.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                border = CardDefaults.outlinedCardBorder()
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    repeat(4) { index ->
-                        val (icon, label) = when (index) {
-                            0 -> Pair(R.drawable.baseline_home_24, "HOME")
-                            1 -> Pair(R.drawable.baseline_apartment_24, "EXPLORE")
-                            2 -> Pair(R.drawable.baseline_home_24, "LEARNING")
-                            else -> Pair(R.drawable.baseline_person_24, "BIDS")
-                        }
+                // Custom Header with wallet balance from ViewModel
+                com.example.kot_start.ui.components.SkillItHeader(
+                    walletBalance = "NPR ${String.format("%.0f", stats.credits)}",
+                    onNotificationClick = { /* Handle notification */ },
+                    onAddCreditsClick = { showAddCreditsScreen = true },
+                    onLogoutClick = { viewModel.logoutUser() }
+                )
 
-                        NavigationPillItem(
-                            icon = icon,
-                            label = label,
-                            isSelected = selectedIndex == index,
-                            onClick = { selectedIndex = index }
-                        )
+                // Show loading indicator
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                } else {
+                    // Main Content
+                    when (selectedIndex) {
+                        0 -> StudentHomeScreen(viewModel)
+                        1 -> ExploreScreen(viewModel)
+                        2 -> StudentMyLearningScreen(viewModel)
+                        3 -> StudentBidsScreen(viewModel)
+                        else -> StudentHomeScreen(viewModel)
+                    }
+                }
+            }
+
+            // Custom Bottom Navigation Pill with Scroll
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 20.dp, start = 16.dp, end = 16.dp)
+                    .fillMaxWidth()
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    border = CardDefaults.outlinedCardBorder()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(4) { index ->
+                            val (icon, label) = when (index) {
+                                0 -> Pair(R.drawable.baseline_home_24, "HOME")
+                                1 -> Pair(R.drawable.baseline_apartment_24, "EXPLORE")
+                                2 -> Pair(R.drawable.baseline_home_24, "LEARNING")
+                                else -> Pair(R.drawable.baseline_person_24, "BIDS")
+                            }
+
+                            NavigationPillItem(
+                                icon = icon,
+                                label = label,
+                                isSelected = selectedIndex == index,
+                                onClick = { selectedIndex = index }
+                            )
+                        }
                     }
                 }
             }
