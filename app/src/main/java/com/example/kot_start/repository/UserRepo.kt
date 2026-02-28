@@ -29,10 +29,11 @@ interface UserRepo {
 
     fun updateProfile(userId: String,modal: UserModel,callback: (Boolean, String) -> Unit    )
 
-    fun deleteProfile(userId: String,UserModal: UserModel,callback: (Boolean, String) -> Unit)
+    fun deleteProfile(userId: String,UserModel: UserModel,callback: (Boolean, String) -> Unit)
 
     fun forgetPassword(email: String, callback: (Boolean, String) -> Unit)
     fun logout(callback: (Boolean, String) -> Unit)
+    fun getUserRole(userId: String, callback: (Boolean, String, String?) -> Unit)
 
 }
 

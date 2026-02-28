@@ -89,6 +89,7 @@ fun SkillitLoginBody() {
     val activity = context as Activity
 
     Scaffold { padding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -273,16 +274,39 @@ fun SkillitLoginBody() {
                             } else {
                                 userViewModel.login(email, password) { success, msg ->
                                     if (success) {
-                                        if (rememberMe) {
-                                            val editor = sharedPreferences.edit()
-                                            editor.putString("email", email)
-                                            editor.putBoolean("rememberMe", true)
-                                            editor.apply()
+                                        // Get current user's ID
+                                        val currentUserId = userViewModel.getCurrentUser()?.uid
+                                        if (currentUserId != null) {
+                                            // Fetch user role from database
+                                            userViewModel.getUserRole(currentUserId) { roleSuccess, roleMsg, userRole ->
+                                                if (roleSuccess && userRole != null) {
+                                                    if (rememberMe) {
+                                                        val editor = sharedPreferences.edit()
+                                                        editor.putString("email", email)
+                                                        editor.putBoolean("rememberMe", true)
+                                                        editor.apply()
+                                                    }
+                                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                                    
+                                                    // Redirect based on role
+                                                    val intent = if (userRole == "Teacher") {
+                                                        Intent(context, TeacherDashboardActivity::class.java)
+                                                    } else {
+                                                        Intent(context, StudentDashboardActivity::class.java)
+                                                    }
+                                                    context.startActivity(intent)
+                                                    activity.finish()
+                                                } else {
+                                                    // Default to StudentDashboard if role fetch fails
+                                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                                    val intent = Intent(context, StudentDashboardActivity::class.java)
+                                                    context.startActivity(intent)
+                                                    activity.finish()
+                                                }
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "Unable to get user ID", Toast.LENGTH_SHORT).show()
                                         }
-                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                        val intent = Intent(context, DashboardActivity::class.java)
-                                        context.startActivity(intent)
-                                        activity.finish()
                                     } else {
                                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                     }

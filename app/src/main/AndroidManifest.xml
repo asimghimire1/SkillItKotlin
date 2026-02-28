@@ -88,7 +88,21 @@
             android:theme="@style/Theme.Kot_start"
             android:screenOrientation="portrait" />
 
-        <!-- New Dashboard -->
+        <!-- Student Dashboard -->
+        <activity
+            android:name=".StudentDashboardActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Kot_start"
+            android:screenOrientation="portrait" />
+
+        <!-- Teacher Dashboard -->
+        <activity
+            android:name=".TeacherDashboardActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Kot_start"
+            android:screenOrientation="portrait" />
+
+        <!-- Legacy Dashboard -->
         <activity
             android:name=".DashboardActivity"
             android:exported="true"

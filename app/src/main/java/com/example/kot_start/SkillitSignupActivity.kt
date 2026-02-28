@@ -351,7 +351,8 @@ fun SkillitSignupBody() {
                                     email = email,
                                     firstName = fullName,
                                     lastName = "",
-                                    dob = ""
+                                    dob = "",
+                                    role = if (selectedRole == "Learn") "Student" else "Teacher"
                                 )
                                 userViewModel.addUserToDatabase(userid, model) { dbSuccess, dbMsg ->
                                     if (dbSuccess) {

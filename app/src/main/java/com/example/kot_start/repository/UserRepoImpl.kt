@@ -109,6 +109,30 @@ class UserRepoImpl: UserRepo {
         }
     }
 
+    override fun getUserRole(
+        userId: String,
+        callback: (Boolean, String, String?) -> Unit
+    ) {
+        ref.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val user = snapshot.getValue(UserModel::class.java)
+                    if (user != null) {
+                        callback(true, "Role found", user.role)
+                    } else {
+                        callback(false, "User not found", null)
+                    }
+                } else {
+                    callback(false, "User does not exist", null)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(false, error.message, null)
+            }
+        })
+    }
+
 
     override fun getUserById(
         userId: String,

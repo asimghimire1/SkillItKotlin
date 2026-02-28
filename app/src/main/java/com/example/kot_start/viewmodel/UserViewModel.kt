@@ -97,4 +97,7 @@ class UserViewModel(val repo: UserRepo): ViewModel() {
         repo.logout(callback)
 
     }
-}
+
+    fun getUserRole(userId: String, callback: (Boolean, String, String?) -> Unit) {
+        repo.getUserRole(userId, callback)
+    }

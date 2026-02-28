@@ -7,6 +7,7 @@
         val firstName:String="",
         val lastName:String="",
         val dob:String="",
+        val role:String="", // "Student" or "Teacher"
     ) {
         fun toMap(): Map<String, Any> {
             return mapOf(
@@ -15,7 +16,8 @@
                 "password" to password,
                 "firstName" to firstName,
                 "lastName" to lastName,
-                "dob" to dob
+                "dob" to dob,
+                "role" to role
             )
         }
     }
