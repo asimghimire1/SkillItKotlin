@@ -133,12 +133,9 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                 when (selectedIndex) {
                     0 -> StudentHomeScreen(viewModel)
                     1 -> StudentAppsScreen(viewModel)
-                    2 -> StudentVideoPlayerScreen(viewModel)
-                    3 -> LiveSessionScreen(viewModel)
-                    4 -> StudentBidsScreen(viewModel)
-                    5 -> StudentWalletScreen(viewModel)
-                    6 -> StudentDevicesScreen()
-                    7 -> StudentProfileScreen(context as ComponentActivity, viewModel)
+                    2 -> StudentMyLearningScreen(viewModel)
+                    3 -> StudentBidsScreen(viewModel)
+                    else -> StudentHomeScreen(viewModel)
                 }
             }
         }
@@ -157,22 +154,19 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 border = CardDefaults.outlinedCardBorder()
             ) {
-                androidx.compose.foundation.lazy.LazyRow(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(8) { index ->
+                    repeat(4) { index ->
                         val (icon, label) = when (index) {
-                            0 -> Pair(R.drawable.baseline_home_24, "Home")
-                            1 -> Pair(R.drawable.baseline_apartment_24, "Explore")
-                            2 -> Pair(R.drawable.baseline_devices_24, "Videos")
-                            3 -> Pair(R.drawable.baseline_apartment_24, "Sessions")
-                            4 -> Pair(R.drawable.baseline_person_24, "Bids")
-                            5 -> Pair(R.drawable.baseline_home_24, "Wallet")
-                            6 -> Pair(R.drawable.baseline_devices_24, "Library")
-                            else -> Pair(R.drawable.baseline_person_24, "Profile")
+                            0 -> Pair(R.drawable.baseline_home_24, "HOME")
+                            1 -> Pair(R.drawable.baseline_apartment_24, "EXPLORE")
+                            2 -> Pair(R.drawable.baseline_home_24, "LEARNING")
+                            else -> Pair(R.drawable.baseline_person_24, "BIDS")
                         }
 
                         NavigationPillItem(
