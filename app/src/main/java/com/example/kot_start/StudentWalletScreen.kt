@@ -22,10 +22,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.kot_start.viewmodel.StudentViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentWalletScreen() {
+fun StudentWalletScreen(viewModel: StudentViewModel) {
+    val stats by viewModel.stats.collectAsState()
+    val transactions by viewModel.transactions.collectAsState()
+    
     var selectedAmount by remember { mutableStateOf<Int?>(null) }
 
     LazyColumn(

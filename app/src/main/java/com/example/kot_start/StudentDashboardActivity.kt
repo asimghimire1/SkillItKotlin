@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.lifecycle.ViewModelProvider
+import com.example.kot_start.repository.UserRepoImpl
+import com.example.kot_start.viewmodel.StudentViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,12 +62,30 @@ import com.example.kot_start.ui.theme.LightBlue
 import com.example.kot_start.ui.theme.greenback
 
 class StudentDashboardActivity : ComponentActivity() {
+    
+    private lateinit var studentViewModel: StudentViewModel
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Initialize ViewModel
+        val userRepo = UserRepoImpl()
+        studentViewModel = ViewModelProvider(this, object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                return StudentViewModel(userRepo) as T
+            }
+        }).get(StudentViewModel::class.java)
+        
+        // Load dashboard data
+        val currentUser = userRepo.getCurrentUser()
+        if (currentUser != null) {
+            studentViewModel.loadDashboardData(currentUser.uid)
+        }
+        
         setContent {
             Kot_startTheme {
-                StudentDashboardBody()
+                StudentDashboardBody(studentViewModel)
             }
         }
     }
@@ -70,10 +93,17 @@ class StudentDashboardActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentDashboardBody() {
+fun StudentDashboardBody(viewModel: StudentViewModel) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
     val studentName = sharedPreferences.getString("firstName", "Student") ?: "Student"
+
+    // Collect StateFlow values
+    val activeTab by viewModel.activeTab.collectAsState()
+    val stats by viewModel.stats.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val pendingBidsCount by viewModel.pendingBidsCount.collectAsState()
 
     data class NavItem(val title: String, val icon: Int)
     
@@ -87,22 +117,29 @@ fun StudentDashboardBody() {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Custom Header
+            // Custom Header with wallet balance from ViewModel
             com.example.kot_start.ui.components.SkillItHeader(
-                walletBalance = "NPR 15k",
+                walletBalance = "NPR ${String.format("%.0f", stats.credits)}",
                 onNotificationClick = { /* Handle notification */ }
             )
 
-            // Main Content
-            when (selectedIndex) {
-                0 -> StudentHomeScreen()
-                1 -> StudentAppsScreen()
-                2 -> StudentVideoPlayerScreen()
-                3 -> LiveSessionScreen()
-                4 -> StudentBidsScreen()
-                5 -> StudentWalletScreen()
-                6 -> StudentDevicesScreen()
-                7 -> StudentProfileScreen(context as ComponentActivity)
+            // Show loading indicator
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            } else {
+                // Main Content
+                when (selectedIndex) {
+                    0 -> StudentHomeScreen(viewModel)
+                    1 -> StudentAppsScreen(viewModel)
+                    2 -> StudentVideoPlayerScreen(viewModel)
+                    3 -> LiveSessionScreen(viewModel)
+                    4 -> StudentBidsScreen(viewModel)
+                    5 -> StudentWalletScreen(viewModel)
+                    6 -> StudentDevicesScreen()
+                    7 -> StudentProfileScreen(context as ComponentActivity, viewModel)
+                }
             }
         }
 
@@ -182,7 +219,9 @@ fun NavigationPillItem(
 }
 
 @Composable
-fun StudentHomeScreen() {
+fun StudentHomeScreen(viewModel: StudentViewModel) {
+    val stats by viewModel.stats.collectAsState()
+    
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -394,7 +433,10 @@ fun StudentHomeScreen() {
 }
 
 @Composable
-fun StudentAppsScreen() {
+fun StudentAppsScreen(viewModel: StudentViewModel) {
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val content by viewModel.content.collectAsState()
+    
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -466,7 +508,7 @@ fun StudentDevicesScreen() {
 }
 
 @Composable
-fun StudentProfileScreen(activity: ComponentActivity) {
+fun StudentProfileScreen(activity: ComponentActivity, viewModel: StudentViewModel) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -507,9 +549,8 @@ fun StudentProfileScreen(activity: ComponentActivity) {
                 description = "Sign out from your account",
                 backgroundColor = Color.Gray,
                 onCardClick = {
-                    // Logout logic
-                    val userViewModel = com.example.kot_start.viewmodel.UserViewModel(com.example.kot_start.repository.UserRepoImpl())
-                    userViewModel.logout { success, message ->
+                    // Logout through ViewModel
+                    viewModel.logoutUser { success, message ->
                         if (success) {
                             val intent = Intent(activity, SkillitLoginActivity::class.java)
                             activity.startActivity(intent)

@@ -23,10 +23,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.kot_start.viewmodel.StudentViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentVideoPlayerScreen() {
+fun StudentVideoPlayerScreen(viewModel: StudentViewModel) {
+    val selectedContent by viewModel.selectedContent.collectAsState()
+    
     var showControls by remember { mutableStateOf(true) }
     var videoProgress by remember { mutableStateOf(0.35f) }
     var openNotesPad by remember { mutableStateOf(false) }
