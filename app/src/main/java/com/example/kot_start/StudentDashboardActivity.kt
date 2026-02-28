@@ -2,6 +2,7 @@ package com.example.kot_start
 
 import android.content.Context
 import android.content.Intent
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -109,6 +110,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
     
     var selectedIndex by remember { mutableIntStateOf(0) }
     var showAddCreditsScreen by remember { mutableStateOf(false) }
+    val activity = context as? Activity
 
     if (showAddCreditsScreen) {
         AddCreditsScreen(
@@ -128,12 +130,38 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
+                // Safe area padding for status bar
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Welcome Message
+                Text(
+                    text = "Welcome, $studentName",
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // Custom Header with wallet balance from ViewModel
                 com.example.kot_start.ui.components.SkillItHeader(
                     walletBalance = "NPR ${String.format("%.0f", stats.credits)}",
                     onNotificationClick = { /* Handle notification */ },
                     onAddCreditsClick = { showAddCreditsScreen = true },
-                    onLogoutClick = { viewModel.logoutUser { _, _ -> } }
+                    onLogoutClick = {
+                        viewModel.logoutUser { success, _ ->
+                            if (success) {
+                                val intent = Intent(context, SkillitLoginActivity::class.java)
+                                context.startActivity(intent)
+                                if (activity != null) {
+                                    activity.finish()
+                                }
+                            }
+                        }
+                    }
                 )
 
                 // Show loading indicator
@@ -144,20 +172,20 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                 } else {
                     // Main Content
                     when (selectedIndex) {
-                        0 -> StudentHomeScreen(viewModel)
+                        0 -> StudentHomeScreen(viewModel, onExploreClick = { selectedIndex = 1 }, onSessionsClick = { selectedIndex = 1 }, onContentClick = { selectedIndex = 2 }, onBidsClick = { selectedIndex = 3 })
                         1 -> ExploreScreen(viewModel)
-                        2 -> StudentBidsScreen(viewModel) // Temporarily showing Bids as placeholder
+                        2 -> StudentMyLearningScreen(viewModel)
                         3 -> StudentBidsScreen(viewModel)
-                        else -> StudentHomeScreen(viewModel)
+                        else -> StudentHomeScreen(viewModel, onExploreClick = { selectedIndex = 1 }, onSessionsClick = { selectedIndex = 1 }, onContentClick = { selectedIndex = 2 }, onBidsClick = { selectedIndex = 3 })
                     }
                 }
             }
 
-            // Custom Bottom Navigation Pill with Scroll
+            // Custom Bottom Navigation Pill with Scroll - Safe area padding
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 20.dp, start = 16.dp, end = 16.dp)
+                    .padding(bottom = 28.dp, start = 16.dp, end = 16.dp)
                     .fillMaxWidth()
             ) {
                 Card(
@@ -178,7 +206,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                             val (icon, label) = when (index) {
                                 0 -> Pair(R.drawable.baseline_home_24, "HOME")
                                 1 -> Pair(R.drawable.baseline_apartment_24, "EXPLORE")
-                                2 -> Pair(R.drawable.baseline_home_24, "LEARNING")
+                                2 -> Pair(R.drawable.baseline_home_24, "CONTENT")
                                 else -> Pair(R.drawable.baseline_person_24, "BIDS")
                             }
 
@@ -227,7 +255,13 @@ fun NavigationPillItem(
 }
 
 @Composable
-fun StudentHomeScreen(viewModel: StudentViewModel) {
+fun StudentHomeScreen(
+    viewModel: StudentViewModel,
+    onExploreClick: () -> Unit = {},
+    onSessionsClick: () -> Unit = {},
+    onContentClick: () -> Unit = {},
+    onBidsClick: () -> Unit = {}
+) {
     val stats by viewModel.stats.collectAsState()
     
     LazyColumn(
@@ -252,7 +286,7 @@ fun StudentHomeScreen(viewModel: StudentViewModel) {
                         subtitle = "Discover skills",
                         iconPainter = R.drawable.baseline_apartment_24,
                         backgroundColor = Color(0xFF1E88E5),
-                        onClick = { },
+                        onClick = { onExploreClick() },
                         modifier = Modifier.weight(1f)
                     )
                     com.example.kot_start.ui.components.NavGridItem(
@@ -260,7 +294,7 @@ fun StudentHomeScreen(viewModel: StudentViewModel) {
                         subtitle = "Booked classes",
                         iconPainter = R.drawable.baseline_devices_24,
                         backgroundColor = Color(0xFFFFA500),
-                        onClick = { },
+                        onClick = { onSessionsClick() },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -269,11 +303,11 @@ fun StudentHomeScreen(viewModel: StudentViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     com.example.kot_start.ui.components.NavGridItem(
-                        title = "Learning",
-                        subtitle = "Your progress",
+                        title = "Content",
+                        subtitle = "Your learning",
                         iconPainter = R.drawable.baseline_home_24,
                         backgroundColor = Color(0xFFEA2A33),
-                        onClick = { },
+                        onClick = { onContentClick() },
                         modifier = Modifier.weight(1f)
                     )
                     com.example.kot_start.ui.components.NavGridItem(
@@ -281,7 +315,7 @@ fun StudentHomeScreen(viewModel: StudentViewModel) {
                         subtitle = "Active offers",
                         iconPainter = R.drawable.baseline_person_24,
                         backgroundColor = Color(0xFF9C27B0),
-                        onClick = { },
+                        onClick = { onBidsClick() },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -297,7 +331,7 @@ fun StudentHomeScreen(viewModel: StudentViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 com.example.kot_start.ui.components.QuickActionButton(
-                    title = "Wallet Top-up",
+                    title = "Wallet Balance",
                     icon = R.drawable.baseline_home_24,
                     iconBackgroundColor = Color(0xFF4CAF50),
                     onClick = { }
