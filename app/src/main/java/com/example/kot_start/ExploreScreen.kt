@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -494,7 +496,7 @@ fun CourseCard(
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.baseline_menu_book_24),
+                                imageVector = Icons.Outlined.MenuBook,
                                 contentDescription = "Lessons",
                                 tint = Color.Gray,
                                 modifier = Modifier.size(14.dp)
@@ -514,7 +516,7 @@ fun CourseCard(
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.baseline_group_24),
+                                imageVector = Icons.Outlined.Group,
                                 contentDescription = "Students",
                                 tint = Color.Gray,
                                 modifier = Modifier.size(14.dp)
@@ -577,6 +579,7 @@ fun CourseCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BidPlacementSheet(
     content: Content,

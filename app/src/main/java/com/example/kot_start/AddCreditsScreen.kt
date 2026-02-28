@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.shadow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -392,7 +393,6 @@ fun PaymentMethodButton(
 
     Box(
         modifier = Modifier
-            .weight(1f)
             .height(50.dp)
             .background(Color.White, RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),

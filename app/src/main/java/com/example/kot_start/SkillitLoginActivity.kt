@@ -266,6 +266,34 @@ fun SkillitLoginBody() {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Demo Mode Button - Pre-fill test credentials
+                    OutlinedButton(
+                        onClick = {
+                            email = "student@test.com"
+                            password = "Test123456"
+                            Toast.makeText(context, "Demo credentials loaded! Click Log in to continue", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color(0xFFFF6B9D),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(
+                            "🎬 Try Demo Mode",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Login Button
                     Button(
                         onClick = {

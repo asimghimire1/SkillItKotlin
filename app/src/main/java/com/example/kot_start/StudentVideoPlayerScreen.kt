@@ -42,7 +42,7 @@ fun StudentVideoPlayerScreen(viewModel: StudentViewModel) {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(
-                    painter = androidx.compose.material.icons.Icons.Filled.Edit,
+                    imageVector = Icons.Filled.Edit,
                     contentDescription = "Notes",
                     tint = Color.White
                 )
@@ -60,131 +60,121 @@ fun StudentVideoPlayerScreen(viewModel: StudentViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
-                    .background(Color.Black),
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF2A2A2A),
+                                Color(0xFF1A1A1A)
+                            )
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                // Video Placeholder
+                // Video Placeholder - Play Icon
+                Icon(
+                    Icons.Filled.PlayArrow,
+                    contentDescription = "Play",
+                    modifier = Modifier.size(80.dp),
+                    tint = Color(0xFFEA2A33)
+                )
+            }
+
+            // Controls Overlay
+            if (showControls) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFF2A2A2A),
-                                    Color(0xFF1A1A1A)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .background(Color.Black.copy(alpha = 0.3f))
                 ) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = "Play",
-                        modifier = Modifier.size(80.dp),
-                        tint = Color(0xFFEA2A33)
-                    )
-                }
-
-                // Controls Overlay
-                AnimatedVisibility(
-                    visible = showControls,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f))
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Text(
+                                "Android Development 101",
+                                style = TextStyle(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            )
+                            IconButton(onClick = { }) {
+                                Icon(
+                                    Icons.Filled.Close,
+                                    contentDescription = "Close",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Progress Bar with Glow
+                            Slider(
+                                value = videoProgress,
+                                onValueChange = { videoProgress = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color(0xFFEA2A33),
+                                    activeTrackColor = Color(0xFFEA2A33),
+                                    inactiveTrackColor = Color.Gray
+                                )
+                            )
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    "Android Development 101",
+                                    "${(videoProgress * 100).toInt()}%",
                                     style = TextStyle(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
                                         color = Color.White
                                     )
                                 )
-                                IconButton(onClick = { }) {
-                                    Icon(
-                                        Icons.Filled.Close,
-                                        contentDescription = "Close",
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // Progress Bar with Glow
-                                Slider(
-                                    value = videoProgress,
-                                    onValueChange = { videoProgress = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = Color(0xFFEA2A33),
-                                        activeTrackColor = Color(0xFFEA2A33),
-                                        inactiveTrackColor = Color.Gray
+                                Text(
+                                    "42:30",
+                                    style = TextStyle(
+                                        fontSize = 12.sp,
+                                        color = Color.White
                                     )
                                 )
+                            }
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        "${(videoProgress * 100).toInt()}%",
-                                        style = TextStyle(
-                                            fontSize = 12.sp,
-                                            color = Color.White
-                                        )
-                                    )
-                                    Text(
-                                        "42:30",
-                                        style = TextStyle(
-                                            fontSize = 12.sp,
-                                            color = Color.White
-                                        )
-                                    )
-                                }
-
-                                // Control Buttons
-                                Row(
+                            // Control Buttons
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(
+                                    onClick = { },
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    IconButton(
-                                        onClick = { },
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(
-                                                Color(0xFFEA2A33),
-                                                RoundedCornerShape(50)
-                                            )
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.PlayArrow,
-                                            contentDescription = "Play",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
+                                        .size(40.dp)
+                                        .background(
+                                            Color(0xFFEA2A33),
+                                            RoundedCornerShape(50)
                                         )
-                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.PlayArrow,
+                                        contentDescription = "Play",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             }
                         }
@@ -334,6 +324,7 @@ fun SyllabusItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuickNotesBottomSheet(
     onDismiss: () -> Unit

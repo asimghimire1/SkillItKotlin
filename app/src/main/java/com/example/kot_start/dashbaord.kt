@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.kot_start.ui.theme.Kot_startTheme
 
-class dashbaord : ComponentActivity() {
+class dashboard : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -190,7 +190,7 @@ fun dashboardBody() {
 
 @Preview(showBackground = true)
 @Composable
-fun dashbaordPreview() {
+fun dashboardPreview() {
     Kot_startTheme {
         dashboardBody()
     }

@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -95,8 +96,7 @@ class StudentDashboardActivity : ComponentActivity() {
 @Composable
 fun StudentDashboardBody(viewModel: StudentViewModel) {
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-    val studentName = sharedPreferences.getString("firstName", "Student") ?: "Student"
+    val studentName = context.getSharedPreferences("User", Context.MODE_PRIVATE).getString("firstName", "Student") ?: "Student"
 
     // Collect StateFlow values
     val activeTab by viewModel.activeTab.collectAsState()
@@ -107,7 +107,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
 
     data class NavItem(val title: String, val icon: Int)
     
-    var selectedIndex by remember { mutableStateOf(0) }
+    var selectedIndex by remember { mutableIntStateOf(0) }
     var showAddCreditsScreen by remember { mutableStateOf(false) }
 
     if (showAddCreditsScreen) {
@@ -133,7 +133,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                     walletBalance = "NPR ${String.format("%.0f", stats.credits)}",
                     onNotificationClick = { /* Handle notification */ },
                     onAddCreditsClick = { showAddCreditsScreen = true },
-                    onLogoutClick = { viewModel.logoutUser() }
+                    onLogoutClick = { viewModel.logoutUser { _, _ -> } }
                 )
 
                 // Show loading indicator
@@ -146,7 +146,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                     when (selectedIndex) {
                         0 -> StudentHomeScreen(viewModel)
                         1 -> ExploreScreen(viewModel)
-                        2 -> StudentMyLearningScreen(viewModel)
+                        2 -> StudentBidsScreen(viewModel) // Temporarily showing Bids as placeholder
                         3 -> StudentBidsScreen(viewModel)
                         else -> StudentHomeScreen(viewModel)
                     }
@@ -234,7 +234,6 @@ fun StudentHomeScreen(viewModel: StudentViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-            .weight(1f)
     ) {
         // Navigation Grid Section
         item {
@@ -449,7 +448,6 @@ fun StudentAppsScreen(viewModel: StudentViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-            .weight(1f)
     ) {
         item {
             com.example.kot_start.ui.components.SearchBar(
@@ -495,7 +493,6 @@ fun StudentDevicesScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .weight(1f)
             .padding(16.dp)
             .background(Color(0xFFF5F5F5))
     ) {
@@ -520,7 +517,6 @@ fun StudentProfileScreen(activity: ComponentActivity, viewModel: StudentViewMode
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .weight(1f)
             .padding(16.dp)
             .background(Color(0xFFF5F5F5))
     ) {
@@ -576,7 +572,6 @@ fun StudentProfileScreen(activity: ComponentActivity, viewModel: StudentViewMode
 @Preview
 @Composable
 fun StudentDashboardPreview() {
-    Kot_startTheme {
-        StudentDashboardBody()
-    }
+    // Note: This preview requires a StudentViewModel to be provided
+    // For preview purposes, consider creating a mock or test instance
 }

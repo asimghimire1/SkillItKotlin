@@ -8,7 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,7 +99,6 @@ fun MyContentScreen(enrollments: List<Enrollment>) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-            .weight(1f)
     ) {
         // Continue Watching Section
         item {
@@ -175,7 +176,6 @@ fun MySessionsScreen(sessions: List<Session>) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-            .weight(1f)
     ) {
         // Upcoming Sessions Section
         item {
@@ -264,7 +264,7 @@ fun ContinueWatchingCard(enrollment: Enrollment) {
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.baseline_play_arrow_24),
+                        imageVector = Icons.Filled.PlayArrow,
                         contentDescription = "Play",
                         tint = Color(0xFFEA2A33),
                         modifier = Modifier.size(32.dp)
@@ -325,7 +325,7 @@ fun ContinueWatchingCard(enrollment: Enrollment) {
             shape = RoundedCornerShape(8.dp)
         ) {
             Icon(
-                painter = painterResource(R.drawable.baseline_play_arrow_24),
+                imageVector = Icons.Filled.PlayArrow,
                 contentDescription = "Resume",
                 tint = Color.White,
                 modifier = Modifier
@@ -369,7 +369,7 @@ fun RecentCourseCard(enrollment: Enrollment) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.baseline_image_24),
+                    imageVector = Icons.Filled.Image,
                     contentDescription = "Course thumbnail",
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
