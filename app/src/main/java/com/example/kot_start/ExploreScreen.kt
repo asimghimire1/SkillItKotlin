@@ -33,6 +33,8 @@ import coil.compose.AsyncImage
 import com.example.kot_start.model.Content
 import com.example.kot_start.model.BidRequest
 import com.example.kot_start.viewmodel.StudentViewModel
+import com.example.kot_start.ui.components.WelcomeHeader
+import com.example.kot_start.ui.components.WalletBalanceCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,94 +67,12 @@ fun ExploreScreen(viewModel: StudentViewModel) {
             .fillMaxSize()
             .background(Color(0xFFF8F6F6))
     ) {
-        // Sticky Header with Search
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                // Search Bar and Filter Button
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Search Field
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.updateSearchQuery(it) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        placeholder = {
-                            Text(
-                                "Search for skills, mentors, or courses",
-                                style = TextStyle(fontSize = 12.sp, color = Color.Gray)
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = Color(0xFFEA2A33),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFEA2A33),
-                            unfocusedBorderColor = Color(0xFFEA2A33).copy(alpha = 0.1f),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        ),
-                        textStyle = TextStyle(fontSize = 12.sp)
-                    )
-
-                    // Filter Button
-                    Button(
-                        onClick = { showFilterMenu = !showFilterMenu },
-                        modifier = Modifier
-                            .size(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFEA2A33)
-                        ),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Filter",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Category Pills
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(categories) { category ->
-                        CategoryPill(
-                            label = category,
-                            isSelected = category == selectedCategory,
-                            onClick = { selectedCategory = category }
-                        )
-                    }
-                }
-            }
-        }
+        // Welcome Header (Non-sticky)
+        WelcomeHeader(
+            onMenuClick = { },
+            onLogoutClick = { },
+            onAddCreditsClick = { }
+        )
 
         if (isLoading) {
             Box(
@@ -169,6 +89,99 @@ fun ExploreScreen(viewModel: StudentViewModel) {
                     .weight(1f),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
+                // Search Bar and Filter
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .padding(16.dp)
+                    ) {
+                        // Search Bar and Filter Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Search Field
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { viewModel.updateSearchQuery(it) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
+                                placeholder = {
+                                    Text(
+                                        "Search for skills, mentors, or courses",
+                                        style = TextStyle(fontSize = 12.sp, color = Color.Gray)
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = Color(0xFFEA2A33),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFEA2A33),
+                                    unfocusedBorderColor = Color(0xFFEA2A33).copy(alpha = 0.1f),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
+                                ),
+                                textStyle = TextStyle(fontSize = 12.sp)
+                            )
+
+                            // Filter Button
+                            Button(
+                                onClick = { showFilterMenu = !showFilterMenu },
+                                modifier = Modifier
+                                    .size(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFEA2A33)
+                                ),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Tune,
+                                    contentDescription = "Filter",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Category Pills
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(categories) { category ->
+                                CategoryPill(
+                                    label = category,
+                                    isSelected = category == selectedCategory,
+                                    onClick = { selectedCategory = category }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Wallet Balance Card
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    WalletBalanceCard(balance = "15,000")
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
                 // Section Header
                 item {
                     Row(
@@ -198,7 +211,7 @@ fun ExploreScreen(viewModel: StudentViewModel) {
                     }
                 }
 
-                // Course Cards
+                // Course Cards with Theme Colors
                 items(filteredContent) { course ->
                     CourseCard(
                         content = course,
@@ -302,6 +315,18 @@ fun CourseCard(
     onPlaceBid: () -> Unit,
     onEnroll: () -> Unit
 ) {
+    // Theme colors palette
+    val themeColors = listOf(
+        Color(0xFFEA2A33),      // Red
+        Color(0xFFFFCDD2),       // Light Red
+        Color(0xFFF48FB1),       // Pink
+        Color(0xFFFCE4EC)        // Light Pink
+    )
+    
+    // Select color based on content ID hash to ensure consistency
+    val cardBackgroundColor = themeColors[(content.contentId.hashCode() % themeColors.size).let { if (it < 0) -it else it }]
+    val badgeColor = if (content.price > 0) Color(0xFFEA2A33) else Color(0xFF4CAF50)
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,12 +339,12 @@ fun CourseCard(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Course Thumbnail
+            // Course Thumbnail with Theme Background
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .background(Color(0xFFDDDDDD))
+                    .background(cardBackgroundColor)
             ) {
                 AsyncImage(
                     model = content.thumbnail.ifEmpty { "https://via.placeholder.com/400x200" },
@@ -334,7 +359,7 @@ fun CourseCard(
                         .align(Alignment.TopStart)
                         .padding(12.dp)
                         .background(
-                            color = if (content.price > 0) Color(0xFFEA2A33) else Color(0xFF4CAF50),
+                            color = badgeColor,
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)

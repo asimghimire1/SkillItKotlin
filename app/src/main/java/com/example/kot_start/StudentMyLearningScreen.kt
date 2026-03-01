@@ -26,6 +26,8 @@ import com.example.kot_start.model.Content
 import com.example.kot_start.model.Enrollment
 import com.example.kot_start.model.Session
 import com.example.kot_start.viewmodel.StudentViewModel
+import com.example.kot_start.ui.components.WelcomeHeader
+import com.example.kot_start.ui.components.WalletBalanceCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +42,13 @@ fun StudentMyLearningScreen(viewModel: StudentViewModel) {
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
+        // Welcome Header
+        WelcomeHeader(
+            onMenuClick = { },
+            onLogoutClick = { },
+            onAddCreditsClick = { }
+        )
+
         // Tab Bar
         TabRow(
             selectedTabIndex = selectedTab,
@@ -100,6 +109,13 @@ fun MyContentScreen(enrollments: List<Enrollment>) {
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
+        // Wallet Balance Card
+        item {
+            Spacer(modifier = Modifier.height(12.dp))
+            WalletBalanceCard(balance = "15,000")
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         // Continue Watching Section
         item {
             if (enrollments.isNotEmpty()) {
@@ -210,12 +226,22 @@ fun MySessionsScreen(sessions: List<Session>) {
 
 @Composable
 fun ContinueWatchingCard(enrollment: Enrollment) {
+    // Theme colors
+    val themeColors = listOf(
+        Color(0xFFEA2A33),      // Red
+        Color(0xFFFFCDD2),       // Light Red
+        Color(0xFFF48FB1),       // Pink
+        Color(0xFFFCE4EC)        // Light Pink
+    )
+    
+    val selectedColor = themeColors[(enrollment.enrollmentId.hashCode() % themeColors.size).let { if (it < 0) -it else it }]
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(180.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFB8A89E)),
+        colors = CardDefaults.cardColors(containerColor = selectedColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
@@ -224,8 +250,8 @@ fun ContinueWatchingCard(enrollment: Enrollment) {
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFB8A89E),
-                            Color(0xFF8B7D74)
+                            selectedColor,
+                            selectedColor.copy(alpha = 0.8f)
                         )
                     )
                 ),
@@ -346,6 +372,16 @@ fun ContinueWatchingCard(enrollment: Enrollment) {
 
 @Composable
 fun RecentCourseCard(enrollment: Enrollment) {
+    // Theme colors
+    val themeColors = listOf(
+        Color(0xFFEA2A33),      // Red
+        Color(0xFFFFCDD2),       // Light Red
+        Color(0xFFF48FB1),       // Pink
+        Color(0xFFFCE4EC)        // Light Pink
+    )
+    
+    val selectedColor = themeColors[(enrollment.contentTitle.hashCode() % themeColors.size).let { if (it < 0) -it else it }]
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -359,12 +395,12 @@ fun RecentCourseCard(enrollment: Enrollment) {
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Thumbnail
+            // Thumbnail with theme color
             Box(
                 modifier = Modifier
                     .width(100.dp)
                     .fillMaxHeight()
-                    .background(Color(0xFF757575))
+                    .background(selectedColor)
                     .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)),
                 contentAlignment = Alignment.Center
             ) {

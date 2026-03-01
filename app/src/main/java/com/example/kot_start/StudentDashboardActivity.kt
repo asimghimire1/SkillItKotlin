@@ -6,7 +6,7 @@ import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -69,7 +70,7 @@ class StudentDashboardActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, true)
         
         // Initialize ViewModel
         val userRepo = UserRepoImpl()
@@ -125,6 +126,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
                 .background(Color(0xFFF8F6F6))
         ) {
             Column(
@@ -144,26 +146,6 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                     modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
                 )
                 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Custom Header with wallet balance from ViewModel
-                com.example.kot_start.ui.components.SkillItHeader(
-                    walletBalance = "NPR ${String.format("%.0f", stats.credits)}",
-                    onNotificationClick = { /* Handle notification */ },
-                    onAddCreditsClick = { showAddCreditsScreen = true },
-                    onLogoutClick = {
-                        viewModel.logoutUser { success, _ ->
-                            if (success) {
-                                val intent = Intent(context, SkillitLoginActivity::class.java)
-                                context.startActivity(intent)
-                                if (activity != null) {
-                                    activity.finish()
-                                }
-                            }
-                        }
-                    }
-                )
-
                 // Show loading indicator
                 if (isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -206,7 +188,7 @@ fun StudentDashboardBody(viewModel: StudentViewModel) {
                             val (icon, label) = when (index) {
                                 0 -> Pair(R.drawable.baseline_home_24, "HOME")
                                 1 -> Pair(R.drawable.baseline_apartment_24, "EXPLORE")
-                                2 -> Pair(R.drawable.baseline_home_24, "CONTENT")
+                                2 -> Pair(R.drawable.baseline_home_24, "LEARNING")
                                 else -> Pair(R.drawable.baseline_person_24, "BIDS")
                             }
 
@@ -303,8 +285,8 @@ fun StudentHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     com.example.kot_start.ui.components.NavGridItem(
-                        title = "Content",
-                        subtitle = "Your learning",
+                        title = "Learning",
+                        subtitle = "Your progress",
                         iconPainter = R.drawable.baseline_home_24,
                         backgroundColor = Color(0xFFEA2A33),
                         onClick = { onContentClick() },
@@ -319,23 +301,6 @@ fun StudentHomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            }
-        }
-
-        // Quick Actions Section
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                com.example.kot_start.ui.components.QuickActionButton(
-                    title = "Wallet Balance",
-                    icon = R.drawable.baseline_home_24,
-                    iconBackgroundColor = Color(0xFF4CAF50),
-                    onClick = { }
-                )
             }
         }
 
@@ -428,6 +393,23 @@ fun StudentHomeScreen(
                         }
                     }
                 }
+            }
+        }
+
+        // Wallet Balance Section
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                com.example.kot_start.ui.components.QuickActionButton(
+                    title = "Wallet Balance",
+                    icon = R.drawable.baseline_home_24,
+                    iconBackgroundColor = Color(0xFF4CAF50),
+                    onClick = { }
+                )
             }
         }
 
