@@ -2,9 +2,12 @@ package com.example.kot_start
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,8 +32,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.launch
 
 class TeacherDashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,32 +49,132 @@ class TeacherDashboardActivity : ComponentActivity() {
 @Composable
 fun TeacherDashboardScreen() {
     val context = LocalContext.current
+    val viewModel: TeacherViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    
     var selectedTab by remember { mutableStateOf(0) }
     var showLogoutMenu by remember { mutableStateOf(false) }
-    var currentScreen by remember { mutableStateOf("dashboard") }  // "dashboard", "session", "content"
+    var currentScreen by remember { mutableStateOf("dashboard") }
+    var selectedVideo by remember { mutableStateOf<Video?>(null) }
+    var selectedSession by remember { mutableStateOf<Session?>(null) }
+    
+    // File picker for video
+    val videoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            // Store the URI to use when uploading
+        }
+    }
+    
+    // File picker for thumbnail
+    val thumbnailLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            // Store the URI to use when uploading
+        }
+    }
+
+    // Status messages
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.Success -> {
+                // Show success toast if needed
+                viewModel.clearUiState()
+            }
+            is UiState.Error -> {
+                // Show error toast if needed
+            }
+            else -> {}
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F6F6))
     ) {
-        if (currentScreen == "dashboard") {
-            DashboardContent(showLogoutMenu) { showLogoutMenu = it }
-        } else if (currentScreen == "session") {
-            ScheduleSessionScreen(onBackClick = { currentScreen = "dashboard" })
-        } else if (currentScreen == "content") {
-            UploadContentScreen(onBackClick = { currentScreen = "dashboard" })
-        } else if (currentScreen == "learning") {
-            TeacherContentScreen(onBackClick = { currentScreen = "dashboard" })
-        } else if (currentScreen == "bids") {
-            TeacherBidsScreen(onBackClick = { currentScreen = "dashboard" })
-        } else if (currentScreen == "earnings") {
-            TeacherEarningsScreen(onBackClick = { currentScreen = "dashboard" })
+        when {
+            selectedVideo != null -> {
+                VideoPlayerScreen(
+                    video = selectedVideo!!,
+                    onBackClick = { selectedVideo = null },
+                    onPlayClick = { 
+                        currentScreen = "dashboard"
+                        selectedVideo = null
+                    }
+                )
+            }
+            selectedSession != null -> {
+                SessionDetailsScreen(
+                    session = selectedSession!!,
+                    onBackClick = { selectedSession = null },
+                    onJoinClick = { 
+                        // Handle join/start session
+                        selectedSession = null
+                    }
+                )
+            }
+            currentScreen == "dashboard" -> {
+                DashboardContent(showLogoutMenu, { showLogoutMenu = it })
+            }
+            currentScreen == "session" -> {
+                ScheduleSessionScreenFunctional(
+                    viewModel = viewModel,
+                    onBackClick = { currentScreen = "dashboard" },
+                    onSessionCreated = { 
+                        currentScreen = "dashboard"
+                    }
+                )
+            }
+            currentScreen == "content" -> {
+                UploadContentScreenFunctional(
+                    viewModel = viewModel,
+                    videoLauncher = videoLauncher,
+                    thumbnailLauncher = thumbnailLauncher,
+                    onBackClick = { currentScreen = "dashboard" },
+                    onVideoUploaded = {
+                        currentScreen = "dashboard"
+                    }
+                )
+            }
+            currentScreen == "learning" -> {
+                TeacherContentScreenFunctional(
+                    viewModel = viewModel,
+                    onBackClick = { currentScreen = "dashboard" },
+                    onVideoClick = { video ->
+                        selectedVideo = video
+                    },
+                    onSessionClick = { session ->
+                        selectedSession = session
+                    }
+                )
+            }
+            currentScreen == "bids" -> {
+                TeacherBidsScreenFunctional(
+                    viewModel = viewModel,
+                    onBackClick = { currentScreen = "dashboard" }
+                )
+            }
+            currentScreen == "earnings" -> {
+                TeacherEarningsScreenFunctional(
+                    viewModel = viewModel,
+                    onBackClick = { currentScreen = "dashboard" }
+                )
+            }
         }
 
         // Floating Bottom Navigation
-        if (currentScreen == "dashboard") {
-            TeacherFloatingBottomNav(selectedTab, { selectedTab = it }, { currentScreen = it })
+        if (currentScreen == "dashboard" && selectedVideo == null && selectedSession == null) {
+            TeacherFloatingBottomNav(
+                selectedTab, 
+                { selectedTab = it }, 
+                { screen -> 
+                    currentScreen = screen
+                }
+            )
         }
     }
 }
