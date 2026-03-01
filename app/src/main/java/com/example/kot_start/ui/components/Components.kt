@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -140,6 +141,141 @@ fun SkillItHeader(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+// ============ WELCOME HEADER ============
+
+@Composable
+fun WelcomeHeader(
+    onMenuClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
+    onAddCreditsClick: () -> Unit = {}
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Welcome",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            )
+
+            Box {
+                IconButton(
+                    onClick = { showMenu = !showMenu },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                // Dropdown Menu
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "Add Credit",
+                                style = TextStyle(
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onAddCreditsClick()
+                        }
+                    )
+
+                    Divider()
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "Logout",
+                                style = TextStyle(
+                                    fontSize = 14.sp,
+                                    color = Color(0xFFEA2A33),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onLogoutClick()
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ============ WALLET BALANCE CARD ============
+
+@Composable
+fun WalletBalanceCard(
+    balance: String = "15,000"
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(100.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    "Your balance is equal to",
+                    style = TextStyle(
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+                Text(
+                    balance,
+                    style = TextStyle(
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
             }
         }
     }
