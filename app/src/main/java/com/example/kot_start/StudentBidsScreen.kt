@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.kot_start.model.Bid
 import com.example.kot_start.viewmodel.StudentViewModel
+import com.example.kot_start.ui.components.WelcomeHeader
+import com.example.kot_start.ui.components.WalletBalanceCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,40 +39,11 @@ fun StudentBidsScreen(viewModel: StudentViewModel) {
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Header
-        TopAppBar(
-            title = {
-                Text(
-                    "My Bids",
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
-            },
-            actions = {
-                IconButton(onClick = { }) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = Color(0xFFEA2A33)
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White
-            ),
-            modifier = Modifier.shadow(elevation = 2.dp)
+        // Welcome Header
+        WelcomeHeader(
+            onMenuClick = { },
+            onLogoutClick = { },
+            onAddCreditsClick = { }
         )
 
         LazyColumn(
@@ -79,6 +52,13 @@ fun StudentBidsScreen(viewModel: StudentViewModel) {
                 .weight(1f),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            // Wallet Balance Card
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                WalletBalanceCard(balance = "15,000")
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             // Step-by-Step Guide Section
             item {
                 Card(
@@ -87,7 +67,7 @@ fun StudentBidsScreen(viewModel: StudentViewModel) {
                         .padding(16.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFFFEBEE)
+                        containerColor = Color(0xFFFFCDD2)
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
@@ -126,26 +106,6 @@ fun StudentBidsScreen(viewModel: StudentViewModel) {
                             BidGuideStep(
                                 number = "3",
                                 text = "Wait for Mentor Approval"
-                            )
-                        }
-
-                        Button(
-                            onClick = { },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFEA2A33)
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                "Learn More",
-                                style = TextStyle(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
                             )
                         }
                     }
@@ -268,6 +228,16 @@ fun ActiveBidCard(
     bid: Bid,
     onCounterOfferClick: () -> Unit = {}
 ) {
+    // Theme colors for card backgrounds
+    val themeColors = listOf(
+        Color(0xFFEA2A33),      // Red
+        Color(0xFFFFCDD2),       // Light Red
+        Color(0xFFF48FB1),       // Pink
+        Color(0xFFFCE4EC)        // Light Pink
+    )
+    
+    val selectedColor = themeColors[(bid.bidId.hashCode() % themeColors.size).let { if (it < 0) -it else it }]
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -284,11 +254,11 @@ fun ActiveBidCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Course Thumbnail
+            // Course Thumbnail with Theme Color
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color(0xFFDDDDDD), RoundedCornerShape(8.dp))
+                    .background(selectedColor, RoundedCornerShape(8.dp))
             ) {
                 AsyncImage(
                     model = "https://via.placeholder.com/80",
