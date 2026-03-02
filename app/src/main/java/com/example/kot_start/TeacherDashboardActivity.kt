@@ -95,6 +95,13 @@ fun TeacherApp() {
         )
         "bid_details" -> TeacherBidDetailsScreen(onBack = { currentScreen = "main"; selectedTab = 2 })
         "earnings_details" -> TeacherEarningsDetailsScreen(onBack = { currentScreen = "main"; selectedTab = 3 })
+        "withdraw" -> TeacherWithdrawScreen(
+            onBack = { currentScreen = "main"; selectedTab = 3 },
+            onWithdraw = { amount, method ->
+                Toast.makeText(context, "Rs ${"%.2f".format(amount)} withdrawn via $method!", Toast.LENGTH_SHORT).show()
+                currentScreen = "main"; selectedTab = 3
+            }
+        )
     }
 }
 
@@ -220,7 +227,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
                         }
                         Text("Rs 4,280.50", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Button(
-                            onClick = { nav("earnings_details") },
+                            onClick = { nav("withdraw") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             shape = RoundedCornerShape(12.dp)
@@ -251,7 +258,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
             ) {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
                     Box(
-                        modifier = Modifier.size(36.dp).background(Color(0xFFF59E0B).copy(alpha = 0.15f), CircleShape),
+                        modifier = Modifier.size(36.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.Lightbulb, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(20.dp))
@@ -280,7 +287,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
             ) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(44.dp).background(statColors[i].copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                        modifier = Modifier.size(44.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(statIcons[i], contentDescription = null, tint = statColors[i], modifier = Modifier.size(22.dp))
@@ -312,7 +319,7 @@ fun QuickActionCard(modifier: Modifier, icon: ImageVector, label: String, color:
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.size(44.dp).background(color.copy(alpha = 0.1f), CircleShape),
+                modifier = Modifier.size(44.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(22.dp))
@@ -394,7 +401,7 @@ fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uplo
                         Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             // Thumbnail placeholder
                             Box(
-                                modifier = Modifier.size(52.dp).background(Color(0xFFEA2A33).copy(alpha = 0.08f), RoundedCornerShape(12.dp)),
+                                modifier = Modifier.size(52.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(Icons.Default.OndemandVideo, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(24.dp))
@@ -422,7 +429,7 @@ fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uplo
                         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
                             Column(modifier = Modifier.padding(32.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(
-                                    modifier = Modifier.size(56.dp).background(Color(0xFFF3F4F6), CircleShape),
+                                    modifier = Modifier.size(56.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(28.dp))
@@ -440,7 +447,7 @@ fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uplo
                         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
                             Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Box(
-                                    modifier = Modifier.size(44.dp).background(Color(0xFF10B981).copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                                    modifier = Modifier.size(44.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(22.dp))
@@ -544,7 +551,7 @@ fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
-                                modifier = Modifier.size(40.dp).background(Color(0xFFEA2A33).copy(alpha = 0.08f), CircleShape),
+                                modifier = Modifier.size(40.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text("S${i + 1}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
@@ -646,7 +653,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                         Text("Total Available Balance", fontSize = 13.sp, color = Color.White.copy(alpha = 0.9f))
                         Text("Rs 4,280.50", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(onClick = { nav("earnings_details") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White), shape = RoundedCornerShape(10.dp)) {
+                            Button(onClick = { nav("withdraw") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White), shape = RoundedCornerShape(10.dp)) {
                                 Icon(Icons.Default.Payment, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
                                 Text("Withdraw", color = Color(0xFFEA2A33), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
@@ -675,7 +682,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
             ) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(42.dp).background(txColors[i].copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                        modifier = Modifier.size(42.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(txIcons[i], contentDescription = null, tint = txColors[i], modifier = Modifier.size(20.dp))
@@ -683,7 +690,6 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(txLabels[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
-                        Text("2 days ago", fontSize = 12.sp, color = Color(0xFF9CA3AF))
                     }
                     Text(if (i == 0) "-Rs ${txAmounts[i]}" else "+Rs ${txAmounts[i]}", fontWeight = FontWeight.Bold, color = txColors[i], fontSize = 14.sp)
                 }
@@ -734,7 +740,7 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
-                        modifier = Modifier.size(50.dp).background(Color(0xFFEA2A33).copy(alpha = 0.08f), CircleShape),
+                        modifier = Modifier.size(50.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.CloudUpload, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(28.dp))
@@ -819,7 +825,7 @@ fun TeacherBidDetailsScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(44.dp).background(Color(0xFF3B82F6).copy(alpha = 0.1f), CircleShape),
+                        modifier = Modifier.size(44.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF3B82F6), modifier = Modifier.size(22.dp))
@@ -898,7 +904,7 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(44.dp).background(breakColors[i].copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                        modifier = Modifier.size(44.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(breakIcons[i], contentDescription = null, tint = breakColors[i], modifier = Modifier.size(22.dp))
@@ -913,5 +919,79 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
             }
         }
         item { Spacer(Modifier.height(16.dp)) }
+    }
+}
+
+// ======================== WITHDRAW SCREEN ========================
+@Composable
+fun TeacherWithdrawScreen(onBack: () -> Unit, onWithdraw: (Double, String) -> Unit) {
+    var selectedAmount by remember { mutableStateOf(0.0) }
+    var customAmount by remember { mutableStateOf("") }
+    var method by remember { mutableStateOf("esewa") }
+    val presets = listOf(50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
+    val totalBalance = 4280.50
+
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF374151)) }
+            Text("Withdraw Funds", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+        }
+        Spacer(Modifier.height(16.dp))
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().background(Brush.horizontalGradient(listOf(Color(0xFFE63946), Color(0xFFFF6B6B)))).padding(20.dp)) {
+                Column {
+                    Text("Available Balance", fontSize = 12.sp, color = Color.White.copy(alpha = 0.9f))
+                    Text("Rs ${"%.2f".format(totalBalance)}", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+        Text("Select Amount", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF111827))
+        Spacer(Modifier.height(10.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (row in presets.chunked(3)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { amount ->
+                        val isSelected = selectedAmount == amount && customAmount.isBlank()
+                        Button(
+                            onClick = { selectedAmount = amount; customAmount = "" },
+                            modifier = Modifier.weight(1f).height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = if (isSelected) Color(0xFFEA2A33) else Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
+                        ) { Text("Rs ${"%.0f".format(amount)}", color = if (isSelected) Color.White else Color(0xFF374151), fontWeight = FontWeight.SemiBold) }
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("Or enter custom amount", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF6B7280))
+        OutlinedTextField(value = customAmount, onValueChange = { customAmount = it; selectedAmount = 0.0 }, placeholder = { Text("Custom amount") }, prefix = { Text("Rs ") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp))
+        Spacer(Modifier.height(16.dp))
+        Text("Withdraw To", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF111827))
+        Spacer(Modifier.height(8.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("esewa" to "eSewa", "bank" to "Bank", "other" to "Other").forEach { (key, label) ->
+                Button(
+                    onClick = { method = key },
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (method == key) Color(0xFFEA2A33) else Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text(label, fontSize = 12.sp, color = if (method == key) Color.White else Color(0xFF374151), fontWeight = FontWeight.SemiBold) }
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        val finalAmount = if (customAmount.isNotBlank()) customAmount.toDoubleOrNull() ?: 0.0 else selectedAmount
+        val methodLabel = when (method) { "esewa" -> "eSewa"; "bank" -> "Bank"; else -> "Other" }
+        Button(
+            onClick = { if (finalAmount > 0 && finalAmount <= totalBalance) onWithdraw(finalAmount, methodLabel) },
+            modifier = Modifier.fillMaxWidth().height(54.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)),
+            shape = RoundedCornerShape(14.dp),
+            enabled = finalAmount > 0 && finalAmount <= totalBalance
+        ) { Text("Withdraw Rs ${"%.2f".format(finalAmount)} via $methodLabel", fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+        Spacer(Modifier.height(10.dp))
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(14.dp)) { Text("Cancel") }
+        Spacer(Modifier.height(24.dp))
     }
 }

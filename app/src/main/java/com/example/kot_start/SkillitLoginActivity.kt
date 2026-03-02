@@ -145,23 +145,11 @@ fun SkillitLoginBody() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // App Logo
-                    Card(
-                        modifier = Modifier.size(80.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE63946)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.logo),
-                                contentDescription = "Skillit Logo",
-                                modifier = Modifier.size(50.dp)
-                            )
-                        }
-                    }
+                    Image(
+                        painter = painterResource(R.drawable.logo),
+                        contentDescription = "Skillit Logo",
+                        modifier = Modifier.size(80.dp)
+                    )
 
                     Spacer(modifier = Modifier.height(20.dp))
 

@@ -54,7 +54,7 @@ fun StudentApp() {
     var currentScreen by remember { mutableStateOf("main") }
     var selectedTab by remember { mutableStateOf(0) }
     val context = LocalContext.current
-    var walletBalance by remember { mutableStateOf(1245.75) }
+    var walletBalance by remember { mutableStateOf(0.0) }
     val enrolledCourses = remember { mutableStateListOf<String>() }
     val studentBids = remember { mutableStateListOf<StudentBid>() }
     var viewingCourseIndex by remember { mutableStateOf(0) }
@@ -522,13 +522,7 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
 // ======================== BIDS TAB ========================
 @Composable
 fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit, userBids: List<StudentBid>) {
-    val allBids = userBids.ifEmpty {
-        listOf(
-            StudentBid("UI/UX Design Mastery", "35", "40"),
-            StudentBid("Kotlin Development", "45", "55"),
-            StudentBid("Brand Strategy Essentials", "60", "70")
-        )
-    }
+    val allBids = userBids
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -536,6 +530,25 @@ fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit, userBids
                 Column {
                     Text("My Bids", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
                     Text("${allBids.size} bid${if (allBids.size != 1) "s" else ""}", fontSize = 13.sp, color = Color(0xFF9CA3AF))
+                }
+            }
+            if (allBids.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.LocalOffer, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(48.dp))
+                            Spacer(Modifier.height(12.dp))
+                            Text("No bids yet", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B7280))
+                            Text("Tap + to place your first bid", fontSize = 13.sp, color = Color(0xFFD1D5DB))
+                        }
+                    }
                 }
             }
             items(allBids.size) { i ->
@@ -621,31 +634,23 @@ fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String
                 }
             }
         }
-        item { Text("Recent Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val txLabels = listOf("Added Funds", "Skill Enrollment", "Referral Bonus", "Skill Fee")
-        val txAmounts = listOf("+Rs 50.00", "-Rs 40.00", "+Rs 25.00", "-Rs 55.00")
-        val txColors = listOf(Color(0xFF10B981), Color(0xFFEF4444), Color(0xFF10B981), Color(0xFFEF4444))
-        val txIcons = listOf(Icons.Default.Add, Icons.Default.School, Icons.Default.CardGiftcard, Icons.Default.TrendingDown)
-        items(txLabels.size) { i ->
+        item {
+            Text("Recent Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827))
+        }
+        item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(14.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(14.dp)
             ) {
-                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(42.dp).background(txColors[i].copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(txIcons[i], contentDescription = null, tint = txColors[i], modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(txLabels[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
-                        Text("2 days ago", fontSize = 12.sp, color = Color(0xFF9CA3AF))
-                    }
-                    Text(txAmounts[i], fontWeight = FontWeight.Bold, color = txColors[i], fontSize = 14.sp)
+                Column(
+                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
+                    Text("Add credits to get started", fontSize = 12.sp, color = Color(0xFFD1D5DB))
                 }
             }
         }
@@ -972,24 +977,15 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             }
         }
         item { Text("Transaction History", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val txLabels = listOf("Added Rs 100", "Enrolled in Skill", "Referral Bonus", "Added Rs 50", "Skill Fee")
-        val txAmounts = listOf("+Rs 100.00", "-Rs 40.00", "+Rs 25.00", "+Rs 50.00", "-Rs 55.00")
-        val txColors = listOf(Color(0xFF10B981), Color(0xFFEF4444), Color(0xFF10B981), Color(0xFF10B981), Color(0xFFEF4444))
-        items(txLabels.size) { i ->
+        item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
-                Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(36.dp).background(txColors[i].copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(if (txColors[i] == Color(0xFFEF4444)) Icons.Default.TrendingDown else Icons.Default.TrendingUp, contentDescription = null, tint = txColors[i], modifier = Modifier.size(18.dp))
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(txLabels[i], fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF111827))
-                        Text("${5 - i} days ago", fontSize = 11.sp, color = Color(0xFF9CA3AF))
-                    }
-                    Text(txAmounts[i], fontWeight = FontWeight.Bold, color = txColors[i], fontSize = 13.sp)
+                Column(
+                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
                 }
             }
         }

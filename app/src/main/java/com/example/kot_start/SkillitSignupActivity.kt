@@ -156,53 +156,6 @@ fun SkillitSignupBody() {
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Back Button & Dynamic Progress
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color.White, RoundedCornerShape(14.dp))
-                            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(14.dp))
-                            .clickable { activity.finish() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF374151), modifier = Modifier.size(22.dp))
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Dynamic progress dots
-                    repeat(4) { index ->
-                        val isFilled = index < filledFields
-                        Box(
-                            modifier = Modifier
-                                .width(if (isFilled) 24.dp else 8.dp)
-                                .height(4.dp)
-                                .background(
-                                    if (isFilled) Color(0xFFE63946) else Color(0xFFE5E7EB),
-                                    RoundedCornerShape(2.dp)
-                                )
-                        )
-                        if (index < 3) Spacer(modifier = Modifier.width(6.dp))
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Step counter
-                    Text(
-                        "$filledFields/4",
-                        style = TextStyle(
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF9CA3AF)
-                        )
-                    )
-                }
-
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Title
@@ -288,7 +241,7 @@ fun SkillitSignupBody() {
                     value = fullName,
                     onValueChange = { fullName = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("e.g. Alex Johnson", color = Color(0xFFD1D5DB)) },
+                    placeholder = { Text("e.g. Asim Ghimire", color = Color(0xFFD1D5DB)) },
                     leadingIcon = {
                         Icon(painter = painterResource(R.drawable.baseline_person_24), contentDescription = "Name", tint = Color(0xFF9CA3AF))
                     },
@@ -458,7 +411,7 @@ fun SkillitSignupBody() {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Login Link
                 Text(
@@ -480,7 +433,7 @@ fun SkillitSignupBody() {
                     }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
     }
