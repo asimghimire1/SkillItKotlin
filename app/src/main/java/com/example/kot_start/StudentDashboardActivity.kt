@@ -1,593 +1,834 @@
 package com.example.kot_start
 
-import android.content.Context
+import android.annotation.SuppressLint
 import android.content.Intent
-import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.view.WindowCompat
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.lifecycle.ViewModelProvider
-import com.example.kot_start.repository.UserRepoImpl
-import com.example.kot_start.viewmodel.StudentViewModel
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kot_start.ui.theme.Kot_startTheme
-import com.example.kot_start.ui.theme.LightBlue
-import com.example.kot_start.ui.theme.greenback
+import androidx.core.view.WindowCompat
 
 class StudentDashboardActivity : ComponentActivity() {
-    
-    private lateinit var studentViewModel: StudentViewModel
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        
-        // Initialize ViewModel
-        val userRepo = UserRepoImpl()
-        studentViewModel = ViewModelProvider(this, object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return StudentViewModel(userRepo) as T
+        setContent { StudentApp() }
+    }
+}
+
+@Composable
+fun StudentApp() {
+    var currentScreen by remember { mutableStateOf("main") }
+    var selectedTab by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+    
+    when (currentScreen) {
+        "main" -> StudentDashboardScreen(
+            onScreenChange = { currentScreen = it },
+            selectedTab = selectedTab,
+            onTabChange = { selectedTab = it },
+            onLogout = {
+                Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
+                val intent = Intent(context, SkillitLoginActivity::class.java)
+                context.startActivity(intent)
+                (context as? ComponentActivity)?.finish()
             }
-        }).get(StudentViewModel::class.java)
-        
-        // Load dashboard data
-        val currentUser = userRepo.getCurrentUser()
-        if (currentUser != null) {
-            studentViewModel.loadDashboardData(currentUser.uid)
+        )
+        "course_details" -> CourseDetailsScreen(
+            onBack = { currentScreen = "main" },
+            onEnroll = {
+                Toast.makeText(context, "Successfully enrolled!", Toast.LENGTH_SHORT).show()
+                currentScreen = "main"
+            }
+        )
+        "course_category" -> CourseCategoryScreen(
+            onBack = { currentScreen = "main" }
+        )
+        "make_offer" -> MakeOfferScreen(
+            onBack = { currentScreen = "main" },
+            onSubmit = { price ->
+                Toast.makeText(context, "Offer of $$price submitted!", Toast.LENGTH_SHORT).show()
+                currentScreen = "main"
+            }
+        )
+        "wallet_details" -> WalletDetailsScreen(
+            onBack = { currentScreen = "main" }
+        )
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StudentDashboardScreen(
+    onScreenChange: (String) -> Unit,
+    selectedTab: Int,
+    onTabChange: (Int) -> Unit,
+    onLogout: () -> Unit
+) {
+    val context = LocalContext.current
+    val tabs = listOf("Dashboard", "Learn", "Offers", "Wallet")
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("") },
+                actions = {
+                    IconButton(onClick = onLogout) {
+                        Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color(0xFFEA2A33))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        bottomBar = {
+            NavigationBar(containerColor = Color.White) {
+                tabs.forEachIndexed { index, tab ->
+                    NavigationBarItem(
+                        icon = {
+                            when (index) {
+                                0 -> Icon(Icons.Default.Home, contentDescription = tab)
+                                1 -> Icon(Icons.Default.MenuBook, contentDescription = tab)
+                                2 -> Icon(Icons.Default.LocalOffer, contentDescription = tab)
+                                else -> Icon(Icons.Default.AccountBalanceWallet, contentDescription = tab)
+                            }
+                        },
+                        label = { Text(tab, fontSize = 10.sp) },
+                        selected = selectedTab == index,
+                        onClick = { onTabChange(index) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFFEA2A33),
+                            selectedTextColor = Color(0xFFEA2A33),
+                            indicatorColor = Color(0xFFEA2A33).copy(alpha = 0.1f)
+                        )
+                    )
+                }
+            }
         }
-        
-        setContent {
-            Kot_startTheme {
-                StudentDashboardBody(studentViewModel)
-            }
+    ) {
+        when (selectedTab) {
+            0 -> StudentDashboardTabContent(context, onScreenChange)
+            1 -> StudentLearnTabContent(context, onScreenChange)
+            2 -> StudentOffersTabContent(context, onScreenChange)
+            else -> StudentWalletTabContent(context, onScreenChange)
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentDashboardBody(viewModel: StudentViewModel) {
-    val context = LocalContext.current
-    val studentName = context.getSharedPreferences("User", Context.MODE_PRIVATE).getString("firstName", "Student") ?: "Student"
-
-    // Collect StateFlow values
-    val activeTab by viewModel.activeTab.collectAsState()
-    val stats by viewModel.stats.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val pendingBidsCount by viewModel.pendingBidsCount.collectAsState()
-
-    data class NavItem(val title: String, val icon: Int)
-    
-    var selectedIndex by remember { mutableIntStateOf(0) }
-    var showAddCreditsScreen by remember { mutableStateOf(false) }
-    val activity = context as? Activity
-
-    if (showAddCreditsScreen) {
-        AddCreditsScreen(
-            currentBalance = stats.credits,
-            onBackClick = { showAddCreditsScreen = false },
-            onProceedClick = { amount, method ->
-                // Handle payment processing
-                showAddCreditsScreen = false
+fun StudentDashboardTabContent(context: android.content.Context, onScreenChange: (String) -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp, 16.dp, 16.dp, 100.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Column {
+                Text("Welcome back!", fontSize = 18.sp, color = Color.Gray)
+                Text("Alex Johnson", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             }
-        )
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .background(Color(0xFFF8F6F6))
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Safe area padding for status bar
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Welcome Message
-                Text(
-                    text = "Welcome, $studentName",
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    ),
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
-                )
-                
-                // Show loading indicator
-                if (isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        androidx.compose.material3.CircularProgressIndicator()
-                    }
-                } else {
-                    // Main Content
-                    when (selectedIndex) {
-                        0 -> StudentHomeScreen(viewModel, onExploreClick = { selectedIndex = 1 }, onSessionsClick = { selectedIndex = 1 }, onContentClick = { selectedIndex = 2 }, onBidsClick = { selectedIndex = 3 })
-                        1 -> ExploreScreen(viewModel)
-                        2 -> StudentMyLearningScreen(viewModel)
-                        3 -> StudentBidsScreen(viewModel)
-                        else -> StudentHomeScreen(viewModel, onExploreClick = { selectedIndex = 1 }, onSessionsClick = { selectedIndex = 1 }, onContentClick = { selectedIndex = 2 }, onBidsClick = { selectedIndex = 3 })
-                    }
-                }
-            }
-
-            // Custom Bottom Navigation Pill with Scroll - Safe area padding
-            Box(
+        }
+        
+        item {
+            Card(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 28.dp, start = 16.dp, end = 16.dp)
                     .fillMaxWidth()
+                    .height(160.dp)
+                    .clickable { onScreenChange("wallet_details") },
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(50.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    border = CardDefaults.outlinedCardBorder()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
+                    Text("Wallet Balance", fontSize = 14.sp, color = Color.White)
+                    Text("$1,245.75", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        repeat(4) { index ->
-                            val (icon, label) = when (index) {
-                                0 -> Pair(R.drawable.baseline_home_24, "HOME")
-                                1 -> Pair(R.drawable.baseline_apartment_24, "EXPLORE")
-                                2 -> Pair(R.drawable.baseline_home_24, "LEARNING")
-                                else -> Pair(R.drawable.baseline_person_24, "BIDS")
-                            }
-
-                            NavigationPillItem(
-                                icon = icon,
-                                label = label,
-                                isSelected = selectedIndex == index,
-                                onClick = { selectedIndex = index }
-                            )
+                        Button(
+                            onClick = {
+                                Toast.makeText(context, "Add funds opening...", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Add Funds", color = Color(0xFFEA2A33), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun NavigationPillItem(
-    icon: Int,
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.clickable(onClick = onClick)
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = label,
-            tint = if (isSelected) Color(0xFFEA2A33) else Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Text(
-            text = label.uppercase(),
-            style = TextStyle(
-                fontSize = 8.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color(0xFFEA2A33) else Color.Gray,
-                letterSpacing = 0.5.sp
-            )
-        )
-    }
-}
-
-@Composable
-fun StudentHomeScreen(
-    viewModel: StudentViewModel,
-    onExploreClick: () -> Unit = {},
-    onSessionsClick: () -> Unit = {},
-    onContentClick: () -> Unit = {},
-    onBidsClick: () -> Unit = {}
-) {
-    val stats by viewModel.stats.collectAsState()
-    
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        // Navigation Grid Section
+        
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    com.example.kot_start.ui.components.NavGridItem(
-                        title = "Explore",
-                        subtitle = "Discover skills",
-                        iconPainter = R.drawable.baseline_apartment_24,
-                        backgroundColor = Color(0xFF1E88E5),
-                        onClick = { onExploreClick() },
-                        modifier = Modifier.weight(1f)
-                    )
-                    com.example.kot_start.ui.components.NavGridItem(
-                        title = "Sessions",
-                        subtitle = "Booked classes",
-                        iconPainter = R.drawable.baseline_devices_24,
-                        backgroundColor = Color(0xFFFFA500),
-                        onClick = { onSessionsClick() },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    com.example.kot_start.ui.components.NavGridItem(
-                        title = "Learning",
-                        subtitle = "Your progress",
-                        iconPainter = R.drawable.baseline_home_24,
-                        backgroundColor = Color(0xFFEA2A33),
-                        onClick = { onContentClick() },
-                        modifier = Modifier.weight(1f)
-                    )
-                    com.example.kot_start.ui.components.NavGridItem(
-                        title = "Bids",
-                        subtitle = "Active offers",
-                        iconPainter = R.drawable.baseline_person_24,
-                        backgroundColor = Color(0xFF9C27B0),
-                        onClick = { onBidsClick() },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+            Text("My Status", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
-
-        // Trending Section
-        item {
-            Column(
+        
+        items(3) { i ->
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clickable {
+                        Toast.makeText(context, "${listOf("Active Courses", "Pending Offers", "Completed")[i]} details", Toast.LENGTH_SHORT).show()
+                    },
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Trending",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    )
-                    androidx.compose.material3.TextButton(
-                        onClick = { }
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "View all",
-                            style = TextStyle(
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFEA2A33)
-                            )
+                            listOf("Active Courses", "Pending Offers", "Completed Courses")[i],
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            listOf("5", "3", "12")[i],
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEA2A33)
                         )
                     }
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
                 }
+            }
+        }
+    }
+}
 
-                // Trending Card (Banner)
-                Card(
+@Composable
+fun StudentLearnTabContent(context: android.content.Context, onScreenChange: (String) -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp, 16.dp, 16.dp, 100.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Browse Courses", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { onScreenChange("course_category") }) {
+                    Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = Color(0xFFEA2A33))
+                }
+            }
+        }
+        
+        items(4) { i ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onScreenChange("course_details") },
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Advanced Course ${i + 1}", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text("By Professor Sarah", fontSize = 11.sp, color = Color.Gray)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("⭐ 4.8 (234 reviews)", fontSize = 11.sp, color = Color(0xFFEA2A33))
+                        }
+                        Text("$${40 + i * 15}", fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        color = Color(0xFFEA2A33).copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text("Available", fontSize = 10.sp, color = Color(0xFFEA2A33), modifier = Modifier.padding(6.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StudentOffersTabContent(context: android.content.Context, onScreenChange: (String) -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp, 16.dp, 16.dp, 100.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("My Pending Offers", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                FloatingActionButton(
+                    onClick = { onScreenChange("make_offer") },
+                    containerColor = Color(0xFFEA2A33),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(20.dp))
+                }
+            }
+        }
+        
+        items(3) { i ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Gray)
+                        .padding(16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Gray),
-                        contentAlignment = Alignment.BottomStart
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Course Offer ${i + 1}", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text("Design Fundamentals", fontSize = 11.sp, color = Color.Gray)
+                            Text("Prof. Sarah", fontSize = 11.sp, color = Color.Gray)
+                        }
+                        Text("Pending", fontSize = 10.sp, color = Color(0xFFF59E0B), fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp))
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Your Offer", fontSize = 11.sp, color = Color.Gray)
+                            Text("$${35 + i * 5}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
+                        }
+                        Text("vs \$${45 + i * 5}", fontSize = 11.sp, color = Color.Gray)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                Toast.makeText(context, "Offer cancelled", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3F4F6))
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        Color(0xFFEA2A33),
-                                        RoundedCornerShape(4.dp)
-                                    )
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "FLASH SALE",
-                                    style = TextStyle(
-                                        fontSize = 8.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Mobile Cinematography",
-                                style = TextStyle(
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            )
-                            Text(
-                                text = "Join expert Raj Thapa this Sunday",
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    color = Color.White.copy(alpha = 0.8f)
-                                )
-                            )
+                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Cancel", fontSize = 11.sp, color = Color.Black)
+                        }
+                        Button(
+                            onClick = {
+                                Toast.makeText(context, "Offer ${i + 1} accepted!", Toast.LENGTH_LONG).show()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Accept", fontSize = 11.sp)
                         }
                     }
                 }
             }
         }
-
-        // Wallet Balance Section
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                com.example.kot_start.ui.components.QuickActionButton(
-                    title = "Wallet Balance",
-                    icon = R.drawable.baseline_home_24,
-                    iconBackgroundColor = Color(0xFF4CAF50),
-                    onClick = { }
-                )
-            }
-        }
-
-        // Upcoming Sessions Section
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Upcoming Sessions",
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                )
-
-                com.example.kot_start.ui.components.SessionCard(
-                    month = "OCT",
-                    day = "24",
-                    title = "UI/UX Advanced Principles",
-                    time = "10:00 AM - 12:30 PM",
-                    onClick = { }
-                )
-
-                com.example.kot_start.ui.components.SessionCard(
-                    month = "OCT",
-                    day = "26",
-                    title = "Digital Marketing Strategy",
-                    time = "02:00 PM - 04:00 PM",
-                    onClick = { }
-                )
-            }
-        }
-
-        // Bottom padding for navigation
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
-        }
     }
 }
 
 @Composable
-fun StudentAppsScreen(viewModel: StudentViewModel) {
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val content by viewModel.content.collectAsState()
-    
+fun StudentWalletTabContent(context: android.content.Context, onScreenChange: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp, 16.dp, 16.dp, 100.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            com.example.kot_start.ui.components.SearchBar(
-                hint = "Search learning resources...",
-                onSearchChange = { }
-            )
-
-            com.example.kot_start.ui.components.SectionHeader(
-                title = "Learning Resources"
-            )
+            Text("Wallet & Credits", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
-
-        items(5) { index ->
-            com.example.kot_start.ui.components.AssignmentCard(
-                title = listOf(
-                    "Video Tutorial: Basics",
-                    "PDF: Advanced Concepts",
-                    "Code Examples",
-                    "Quiz: Chapter 1",
-                    "Assignment: Build App"
-                )[index],
-                subject = "Android Development",
-                dueDate = listOf(
-                    "Available now",
-                    "Available now",
-                    "Available now",
-                    "Due: Mar 5",
-                    "Due: Mar 10"
-                )[index],
-                status = "pending",
-                onCardClick = { }
-            )
-        }
-
+        
         item {
-            Spacer(modifier = Modifier.height(80.dp))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clickable { onScreenChange("wallet_details") },
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Available Balance", fontSize = 12.sp, color = Color.White)
+                    Text("$1,245.75", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                Toast.makeText(context, "Add funds initiated", Toast.LENGTH_LONG).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Add Funds", color = Color(0xFFEA2A33), fontSize = 12.sp)
+                        }
+                        Button(
+                            onClick = {
+                                Toast.makeText(context, "History opening...", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.3f))
+                        ) {
+                            Icon(Icons.Default.History, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("History", color = Color.White, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+        
+        item {
+            Text("Recent Transactions", fontWeight = FontWeight.SemiBold)
+        }
+        
+        items(4) { i ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        when (i) {
+                            0 -> Icons.Default.Add
+                            1 -> Icons.Default.School
+                            2 -> Icons.Default.CardGiftcard
+                            else -> Icons.Default.TrendingDown
+                        },
+                        contentDescription = null,
+                        tint = if (i == 3) Color.Red else Color(0xFFEA2A33),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            listOf("Added Funds", "Course Purchase", "Referral Bonus", "Course Fee")[i],
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                        Text("2 days ago", fontSize = 11.sp, color = Color.Gray)
+                    }
+                    Text(
+                        if (i == 3) "-\$${"%.2f".format(50)}" else "+\$${"%.2f".format(50 * (i + 1))}",
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (i == 3) Color.Red else Color(0xFF10B981),
+                        fontSize = 13.sp
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun StudentDevicesScreen() {
+fun CourseDetailsScreen(onBack: () -> Unit, onEnroll: () -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Text("Course Details", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            }
+        }
+        
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.OndemandVideo, contentDescription = null, tint = Color.White, modifier = Modifier.size(80.dp))
+                }
+            }
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Column {
+                Text("Advanced UI/UX Design", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("By Professor Sarah", fontSize = 12.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("⭐ 4.8 (234 reviews)", fontSize = 12.sp, color = Color(0xFFEA2A33))
+            }
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Course Info", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Duration:", fontSize = 12.sp)
+                        Text("8 weeks", fontWeight = FontWeight.SemiBold)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Level:", fontSize = 12.sp)
+                        Text("Intermediate", fontWeight = FontWeight.SemiBold)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Students:", fontSize = 12.sp)
+                        Text("1,240 enrolled", fontWeight = FontWeight.SemiBold)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Price:", fontSize = 12.sp)
+                        Text("$49.99", fontWeight = FontWeight.SemiBold, color = Color(0xFFEA2A33))
+                    }
+                }
+            }
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("What You'll Learn", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    repeat(3) { i ->
+                        Row(modifier = Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
+                            Text("Learning point ${i + 1}", fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onEnroll,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))
+            ) {
+                Text("Enroll Now", fontWeight = FontWeight.SemiBold)
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Back")
+            }
+        }
+    }
+}
+
+@Composable
+fun CourseCategoryScreen(onBack: () -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            }
+        }
+        
+        items(5) { i ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onBack() },
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            when (i) {
+                                0 -> Icons.Default.Palette
+                                1 -> Icons.Default.Computer
+                                2 -> Icons.Default.BusinessCenter
+                                3 -> Icons.Default.FitnessCenter
+                                else -> Icons.Default.MoreHoriz
+                            },
+                            contentDescription = null,
+                            tint = Color(0xFFEA2A33),
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Column {
+                            Text(
+                                listOf("Design", "Technology", "Business", "Lifestyle", "Other")[i],
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text("${15 + i * 3} courses", fontSize = 11.sp, color = Color.Gray)
+                        }
+                    }
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MakeOfferScreen(onBack: () -> Unit, onSubmit: (String) -> Unit) {
+    var offerPrice by remember { mutableStateOf("") }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
             .padding(16.dp)
-            .background(Color(0xFFF5F5F5))
     ) {
-        com.example.kot_start.ui.components.SectionHeader(
-            title = "Your Devices"
-        )
-
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+            Text("Make an Offer", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
-
-        // Currently no devices added
-        com.example.kot_start.ui.components.EmptyState(
-            title = "No devices added",
-            description = "Connect your devices to access learning materials offline",
-            actionText = "Add Device",
-            onActionClick = { }
+        
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Course:", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                Text("Advanced UI/UX Design", fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Normal Price:", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                Text("$49.99", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(20.dp))
+        
+        Text("Your Offer Price", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        OutlinedTextField(
+            value = offerPrice,
+            onValueChange = { offerPrice = it },
+            placeholder = { Text("Enter price in $") },
+            prefix = { Text("$") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
         )
-    }
-}
-
-@Composable
-fun StudentProfileScreen(activity: ComponentActivity, viewModel: StudentViewModel) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .background(Color(0xFFF5F5F5))
-    ) {
-        item {
-            com.example.kot_start.ui.components.SectionHeader(
-                title = "Profile Settings"
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                "Tips: Make a reasonable offer. Professors prefer competitive prices!",
+                fontSize = 11.sp,
+                color = Color(0xFFB45309),
+                modifier = Modifier.padding(12.dp)
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            com.example.kot_start.ui.components.QuickActionCard(
-                title = "Edit Profile",
-                description = "Update your personal information",
-                backgroundColor = LightBlue,
-                onCardClick = { }
-            )
-
-            com.example.kot_start.ui.components.QuickActionCard(
-                title = "Change Password",
-                description = "Update your account security",
-                backgroundColor = Color(0xFFFF6B6B),
-                onCardClick = { }
-            )
-
-            com.example.kot_start.ui.components.QuickActionCard(
-                title = "Notification Settings",
-                description = "Manage your preferences",
-                backgroundColor = greenback,
-                onCardClick = { }
-            )
-
-            com.example.kot_start.ui.components.QuickActionCard(
-                title = "Logout",
-                description = "Sign out from your account",
-                backgroundColor = Color.Gray,
-                onCardClick = {
-                    // Logout through ViewModel
-                    viewModel.logoutUser { success, message ->
-                        if (success) {
-                            val intent = Intent(activity, SkillitLoginActivity::class.java)
-                            activity.startActivity(intent)
-                            activity.finish()
-                        }
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(80.dp))
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        Button(
+            onClick = { if (offerPrice.isNotEmpty()) onSubmit(offerPrice) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))
+        ) {
+            Text("Submit Offer", fontWeight = FontWeight.SemiBold)
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        OutlinedButton(
+            onClick = onBack,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Text("Cancel")
         }
     }
 }
 
-@Preview
 @Composable
-fun StudentDashboardPreview() {
-    // Note: This preview requires a StudentViewModel to be provided
-    // For preview purposes, consider creating a mock or test instance
+fun WalletDetailsScreen(onBack: () -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F6F6))
+            .padding(16.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Text("Wallet Details", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            }
+        }
+        
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Available Balance", fontSize = 12.sp, color = Color.White)
+                        Text("$1,245.75", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                    Text("Last Updated: Today at 2:30 PM", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                }
+            }
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Quick Stats", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+        
+        items(3) { i ->
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(listOf("Spent on Courses", "Referral Earnings", "Available")[i], fontWeight = FontWeight.SemiBold)
+                        Text("$${listOf("250", "125", "1245.75")[i]}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
+                    }
+                }
+            }
+        }
+    }
 }
