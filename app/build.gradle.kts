@@ -3,13 +3,11 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
- }
+}
 
 android {
     namespace = "com.example.kot_start"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.kot_start"
@@ -56,15 +54,15 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.coil.compose)
     implementation(libs.play.services.maps)
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.storage)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.storage.ktx)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.navigation.compose)
     implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
+    implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

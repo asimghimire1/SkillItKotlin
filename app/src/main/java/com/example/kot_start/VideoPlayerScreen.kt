@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +78,6 @@ fun VideoPlayerScreen(
                                     player = playerInstance
                                     useController = true
                                     controllerShowTimeoutMs = 5000
-                                    controllerHideTimeoutMs = 5000
                                 }
                             },
                             modifier = Modifier.fillMaxSize()
@@ -484,7 +484,7 @@ fun SessionDetailsScreen(
 private fun SessionInfoRow(
     label: String,
     value: String,
-    icon: androidx.compose.material.icons.materialIcon
+    icon: ImageVector
 ) {
     Row(
         modifier = Modifier

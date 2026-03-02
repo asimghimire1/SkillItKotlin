@@ -13,7 +13,7 @@ class DataRepository {
     // ==================== VIDEO OPERATIONS ====================
     suspend fun uploadVideo(videoUri: Uri, thumbnailUri: Uri?, video: Video): Result<String> = runCatching {
         val videoRef = storage.reference.child("videos/${System.currentTimeMillis()}_${video.title}")
-        val videoTask = videoRef.putFile(videoUri).await()
+        videoRef.putFile(videoUri).await()
         val videoUrl = videoRef.downloadUrl.await().toString()
 
         val thumbnailUrl = if (thumbnailUri != null) {
@@ -45,10 +45,6 @@ class DataRepository {
             .filter { it.teacherId == teacherId }
     }
 
-    suspend fun updateVideo(video: Video): Result<Unit> = runCatching {
-        database.reference.child("videos").child(video.id).setValue(video).await()
-    }
-
     suspend fun deleteVideo(videoId: String): Result<Unit> = runCatching {
         database.reference.child("videos").child(videoId).removeValue().await()
     }
@@ -61,11 +57,6 @@ class DataRepository {
         sessionId
     }
 
-    suspend fun getSession(sessionId: String): Result<Session> = runCatching {
-        val snapshot = database.reference.child("sessions").child(sessionId).get().await()
-        snapshot.getValue(Session::class.java) ?: throw Exception("Session not found")
-    }
-
     suspend fun getTeacherSessions(teacherId: String): Result<List<Session>> = runCatching {
         val snapshot = database.reference.child("sessions").get().await()
         snapshot.children.mapNotNull { it.getValue(Session::class.java) }
@@ -73,27 +64,11 @@ class DataRepository {
             .sortedByDescending { it.createdAt }
     }
 
-    suspend fun updateSession(session: Session): Result<Unit> = runCatching {
-        database.reference.child("sessions").child(session.id).setValue(session).await()
-    }
-
     suspend fun deleteSession(sessionId: String): Result<Unit> = runCatching {
         database.reference.child("sessions").child(sessionId).removeValue().await()
     }
 
     // ==================== BID OPERATIONS ====================
-    suspend fun createBid(bid: Bid): Result<String> = runCatching {
-        val bidId = database.reference.child("bids").push().key ?: ""
-        val newBid = bid.copy(id = bidId)
-        database.reference.child("bids").child(bidId).setValue(newBid).await()
-        bidId
-    }
-
-    suspend fun getBid(bidId: String): Result<Bid> = runCatching {
-        val snapshot = database.reference.child("bids").child(bidId).get().await()
-        snapshot.getValue(Bid::class.java) ?: throw Exception("Bid not found")
-    }
-
     suspend fun getTeacherBids(teacherId: String): Result<List<Bid>> = runCatching {
         val snapshot = database.reference.child("bids").get().await()
         snapshot.children.mapNotNull { it.getValue(Bid::class.java) }
@@ -110,13 +85,6 @@ class DataRepository {
     }
 
     // ==================== TRANSACTION OPERATIONS ====================
-    suspend fun addTransaction(transaction: Transaction): Result<String> = runCatching {
-        val transactionId = database.reference.child("transactions").push().key ?: ""
-        val newTransaction = transaction.copy(id = transactionId)
-        database.reference.child("transactions").child(transactionId).setValue(newTransaction).await()
-        transactionId
-    }
-
     suspend fun getTeacherTransactions(teacherId: String): Result<List<Transaction>> = runCatching {
         val snapshot = database.reference.child("transactions").child(teacherId).get().await()
         snapshot.children.mapNotNull { it.getValue(Transaction::class.java) }
@@ -128,10 +96,6 @@ class DataRepository {
         snapshot.getValue(Float::class.java) ?: 0f
     }
 
-    suspend fun updateTeacherBalance(teacherId: String, newBalance: Float): Result<Unit> = runCatching {
-        database.reference.child("teacher_balances").child(teacherId).setValue(newBalance).await()
-    }
-
     // ==================== PROFILE OPERATIONS ====================
     suspend fun updateTeacherProfile(profile: TeacherProfile): Result<Unit> = runCatching {
         database.reference.child("teachers").child(profile.uid).setValue(profile).await()
@@ -140,11 +104,5 @@ class DataRepository {
     suspend fun getTeacherProfile(uid: String): Result<TeacherProfile> = runCatching {
         val snapshot = database.reference.child("teachers").child(uid).get().await()
         snapshot.getValue(TeacherProfile::class.java) ?: throw Exception("Profile not found")
-    }
-
-    suspend fun uploadProfileImage(imageUri: Uri, userId: String): Result<String> = runCatching {
-        val imageRef = storage.reference.child("profiles/${userId}_${System.currentTimeMillis()}")
-        imageRef.putFile(imageUri).await()
-        imageRef.downloadUrl.await().toString()
     }
 }
