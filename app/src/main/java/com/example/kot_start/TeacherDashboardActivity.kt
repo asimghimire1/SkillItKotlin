@@ -5,7 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -36,7 +39,6 @@ class TeacherDashboardActivity : ComponentActivity() {
     }
 }
 
-// ── Data holders for teacher uploaded content & sessions ──
 data class TeacherContent(val title: String, val description: String, val category: String, val price: String, val isPaid: Boolean)
 data class TeacherSession(val title: String, val date: String, val time: String, val duration: String)
 
@@ -47,6 +49,14 @@ fun TeacherApp() {
     val context = LocalContext.current
     val uploadedContent = remember { mutableStateListOf<TeacherContent>() }
     val scheduledSessions = remember { mutableStateListOf<TeacherSession>() }
+
+    // Handle back: if on a sub-screen go back to main, if on main go back to previous tab or do nothing
+    BackHandler {
+        when (currentScreen) {
+            "main" -> { /* do nothing – stay on dashboard */ }
+            else -> { currentScreen = "main" }
+        }
+    }
 
     when (currentScreen) {
         "main" -> TeacherDashboardScreen(
@@ -72,11 +82,11 @@ fun TeacherApp() {
             }
         )
         "add_session" -> TeacherAddSessionScreen(
-            onBack = { currentScreen = "main"; selectedTab = 2 },
+            onBack = { currentScreen = "main"; selectedTab = 1 },
             onSave = { session ->
                 scheduledSessions.add(session)
                 Toast.makeText(context, "'${session.title}' scheduled!", Toast.LENGTH_SHORT).show()
-                currentScreen = "main"; selectedTab = 2
+                currentScreen = "main"; selectedTab = 1
             }
         )
         "bid_details" -> TeacherBidDetailsScreen(onBack = { currentScreen = "main"; selectedTab = 2 })
@@ -85,7 +95,7 @@ fun TeacherApp() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  MAIN SCAFFOLD
+//  MAIN SCAFFOLD – Tabs: Home, Learning, Bids, Earnings
 // ══════════════════════════════════════════════════════════════
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,14 +109,18 @@ fun TeacherDashboardScreen(
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
-    val tabs = listOf("Home", "Content", "Bids", "Earnings")
+    val tabs = listOf("Home", "Learning", "Bids", "Earnings")
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.School, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(22.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "SkillIt",
+                            modifier = Modifier.size(28.dp)
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("SkillIt", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
                     }
@@ -126,7 +140,7 @@ fun TeacherDashboardScreen(
                         icon = {
                             when (index) {
                                 0 -> Icon(Icons.Default.Dashboard, contentDescription = tab)
-                                1 -> Icon(Icons.Default.OndemandVideo, contentDescription = tab)
+                                1 -> Icon(Icons.Default.MenuBook, contentDescription = tab)
                                 2 -> Icon(Icons.Default.TrendingUp, contentDescription = tab)
                                 else -> Icon(Icons.Default.AttachMoney, contentDescription = tab)
                             }
@@ -147,8 +161,8 @@ fun TeacherDashboardScreen(
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 0 -> TeacherHomeTab(context, onScreenChange)
-                1 -> TeacherContentTab(context, onScreenChange, uploadedContent)
-                2 -> TeacherBidsTab(context, onScreenChange, scheduledSessions)
+                1 -> TeacherLearningTab(context, onScreenChange, uploadedContent, scheduledSessions)
+                2 -> TeacherBidsTab(context, onScreenChange)
                 else -> TeacherEarningsTab(context, onScreenChange)
             }
         }
@@ -156,7 +170,7 @@ fun TeacherDashboardScreen(
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 0 – HOME (no Add Credits – teacher earns, doesn't buy)
+//  TAB 0 – HOME (no names, just "Welcome back!")
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
@@ -165,10 +179,8 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text("Welcome back!", fontSize = 16.sp, color = Color.Gray)
-            Text("Professor Sarah", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("Welcome back!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
-        // Earnings card – Withdraw only (no Add Credits for teacher)
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -208,94 +220,89 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 1 – CONTENT (shows uploaded + FAB to add)
+//  TAB 1 – LEARNING (two sections: My Content + My Sessions)
 // ══════════════════════════════════════════════════════════════
 @Composable
-fun TeacherContentTab(ctx: android.content.Context, nav: (String) -> Unit, uploaded: List<TeacherContent>) {
-    // Pre-seeded demo courses
+fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uploaded: List<TeacherContent>, sessions: List<TeacherSession>) {
+    var subTab by remember { mutableStateOf(0) } // 0 = My Content, 1 = My Sessions
+
     val demo = listOf(
         TeacherContent("UI/UX Fundamentals", "Learn design basics", "Design", "$29", true),
         TeacherContent("Kotlin Crash Course", "Android dev essentials", "Technology", "Free", false),
         TeacherContent("Brand Strategy", "Marketing your brand", "Business", "$19", true),
     )
-    val all = demo + uploaded
+    val allContent = demo + uploaded
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6))) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item { Text("Learning", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+            // Sub-tab row
             item {
-                Text("My Content (${all.size})", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-            items(all.size) { i ->
-                val c = all[i]
-                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(c.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                            Text(c.description, fontSize = 11.sp, color = Color.Gray)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Surface(color = Color(0xFFEA2A33).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
-                                    Text(c.category, fontSize = 10.sp, color = Color(0xFFEA2A33), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                }
-                                Surface(color = if (c.isPaid) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFF3B82F6).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
-                                    Text(if (c.isPaid) c.price else "Free", fontSize = 10.sp, color = if (c.isPaid) Color(0xFF10B981) else Color(0xFF3B82F6), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                }
-                            }
-                        }
-                        Icon(Icons.Default.OndemandVideo, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(28.dp))
-                    }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { subTab = 0 },
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (subTab == 0) Color(0xFFEA2A33) else Color.White),
+                        shape = RoundedCornerShape(10.dp)
+                    ) { Text("My Content", fontSize = 12.sp, color = if (subTab == 0) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
+                    Button(
+                        onClick = { subTab = 1 },
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (subTab == 1) Color(0xFFEA2A33) else Color.White),
+                        shape = RoundedCornerShape(10.dp)
+                    ) { Text("My Sessions", fontSize = 12.sp, color = if (subTab == 1) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
                 }
             }
-            item { Spacer(modifier = Modifier.height(72.dp)) }
-        }
-        // FAB
-        FloatingActionButton(
-            onClick = { nav("add_content") },
-            containerColor = Color(0xFFEA2A33),
-            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
-        ) { Icon(Icons.Default.Add, contentDescription = "Upload", tint = Color.White) }
-    }
-}
 
-// ══════════════════════════════════════════════════════════════
-//  TAB 2 – BIDS (shows bids + sessions + FAB to schedule)
-// ══════════════════════════════════════════════════════════════
-@Composable
-fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit, sessions: List<TeacherSession>) {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6))) {
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { Text("Student Bids", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-            items(3) { i ->
-                Card(modifier = Modifier.fillMaxWidth().clickable { nav("bid_details") }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Student ${i + 1} Offer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        Text("Advanced Design Course", fontSize = 11.sp, color = Color.Gray)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column { Text("Offered", fontSize = 10.sp, color = Color.Gray); Text("$${40 + i * 5}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
-                            Text("Your Rate: $45", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.align(Alignment.CenterVertically))
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { Toast.makeText(ctx, "Counter offer sent", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3F4F6))) { Text("Counter", fontSize = 11.sp, color = Color.Black) }
-                            Button(onClick = { Toast.makeText(ctx, "Bid accepted!", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))) { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Accept", fontSize = 11.sp) }
-                        }
-                    }
-                }
-            }
-            // Scheduled sessions section
-            if (sessions.isNotEmpty()) {
-                item { Spacer(modifier = Modifier.height(8.dp)); Text("Scheduled Sessions (${sessions.size})", fontSize = 15.sp, fontWeight = FontWeight.Bold) }
-                items(sessions.size) { i ->
-                    val s = sessions[i]
+            if (subTab == 0) {
+                // ── My Content section ──
+                item { Text("My Content (${allContent.size})", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Gray) }
+                items(allContent.size) { i ->
+                    val c = allContent[i]
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(24.dp))
-                            Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(s.title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("${s.date} • ${s.time} • ${s.duration}", fontSize = 11.sp, color = Color.Gray)
+                                Text(c.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                Text(c.description, fontSize = 11.sp, color = Color.Gray)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Surface(color = Color(0xFFEA2A33).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                                        Text(c.category, fontSize = 10.sp, color = Color(0xFFEA2A33), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                    Surface(color = if (c.isPaid) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFF3B82F6).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                                        Text(if (c.isPaid) c.price else "Free", fontSize = 10.sp, color = if (c.isPaid) Color(0xFF10B981) else Color(0xFF3B82F6), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                            }
+                            Icon(Icons.Default.OndemandVideo, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(28.dp))
+                        }
+                    }
+                }
+            } else {
+                // ── My Sessions section ──
+                if (sessions.isEmpty()) {
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                            Column(modifier = Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.Event, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(40.dp))
+                                Spacer(Modifier.height(8.dp))
+                                Text("No sessions scheduled yet", fontSize = 13.sp, color = Color.Gray)
+                                Text("Tap + to schedule one", fontSize = 11.sp, color = Color.LightGray)
+                            }
+                        }
+                    }
+                } else {
+                    item { Text("Scheduled Sessions (${sessions.size})", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Gray) }
+                    items(sessions.size) { i ->
+                        val s = sessions[i]
+                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(24.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(s.title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text("${s.date} • ${s.time} • ${s.duration}", fontSize = 11.sp, color = Color.Gray)
+                                }
                             }
                         }
                     }
@@ -303,12 +310,45 @@ fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit, sessions
             }
             item { Spacer(modifier = Modifier.height(72.dp)) }
         }
-        FloatingActionButton(onClick = { nav("add_session") }, containerColor = Color(0xFFEA2A33), modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)) { Icon(Icons.Default.Add, contentDescription = "Schedule", tint = Color.White) }
+        // FAB – add content or session depending on sub-tab
+        FloatingActionButton(
+            onClick = { if (subTab == 0) nav("add_content") else nav("add_session") },
+            containerColor = Color(0xFFEA2A33),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
+        ) { Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White) }
     }
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 3 – EARNINGS  (opens details page on card click)
+//  TAB 2 – BIDS (student bids only, no sessions here)
+// ══════════════════════════════════════════════════════════════
+@Composable
+fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
+    LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item { Text("Student Bids", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        items(3) { i ->
+            Card(modifier = Modifier.fillMaxWidth().clickable { nav("bid_details") }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Student ${i + 1} Offer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("Advanced Design Course", fontSize = 11.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column { Text("Offered", fontSize = 10.sp, color = Color.Gray); Text("$${40 + i * 5}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
+                        Text("Your Rate: $45", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.align(Alignment.CenterVertically))
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { Toast.makeText(ctx, "Counter offer sent", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3F4F6))) { Text("Counter", fontSize = 11.sp, color = Color.Black) }
+                        Button(onClick = { Toast.makeText(ctx, "Bid accepted!", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))) { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Accept", fontSize = 11.sp) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TAB 3 – EARNINGS
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
@@ -343,7 +383,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  ADD CONTENT (full form: title, desc, category, pricing)
+//  ADD CONTENT SCREEN
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit) {
@@ -360,14 +400,11 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
             Text("Upload Content", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(20.dp))
-
         Text("Title *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         OutlinedTextField(value = title, onValueChange = { title = it }, placeholder = { Text("e.g. Advanced UI Design") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
-
         Spacer(Modifier.height(12.dp))
         Text("Description", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         OutlinedTextField(value = desc, onValueChange = { desc = it }, placeholder = { Text("What will students learn?") }, modifier = Modifier.fillMaxWidth().height(100.dp).padding(vertical = 6.dp), maxLines = 4)
-
         Spacer(Modifier.height(12.dp))
         Text("Category", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         var expanded by remember { mutableStateOf(false) }
@@ -375,7 +412,6 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
             OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) { Text(category, modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { categories.forEach { cat -> DropdownMenuItem(text = { Text(cat) }, onClick = { category = cat; expanded = false }) } }
         }
-
         Spacer(Modifier.height(16.dp))
         Text("Pricing", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -385,9 +421,7 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
         if (isPaid) {
             OutlinedTextField(value = price, onValueChange = { price = it }, placeholder = { Text("Price in $") }, prefix = { Text("$") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
         }
-
         Spacer(Modifier.height(16.dp))
-        // Upload area placeholder
         Card(modifier = Modifier.fillMaxWidth().height(120.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F4F6)), shape = RoundedCornerShape(12.dp)) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -397,7 +431,6 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
                 }
             }
         }
-
         Spacer(Modifier.height(24.dp))
         Button(
             onClick = { if (title.isNotBlank()) onSave(TeacherContent(title, desc.ifBlank { "No description" }, category, if (isPaid) "$$price" else "Free", isPaid)) },
@@ -405,7 +438,6 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)),
             enabled = title.isNotBlank()
         ) { Text("Upload Content", fontWeight = FontWeight.SemiBold) }
-
         Spacer(Modifier.height(10.dp))
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth().height(44.dp)) { Text("Cancel") }
         Spacer(Modifier.height(32.dp))
@@ -413,7 +445,7 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
 }
 
 // ══════════════════════════════════════════════════════════════
-//  ADD SESSION (full form: title, date, time, duration)
+//  ADD SESSION SCREEN
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherAddSessionScreen(onBack: () -> Unit, onSave: (TeacherSession) -> Unit) {
@@ -428,18 +460,14 @@ fun TeacherAddSessionScreen(onBack: () -> Unit, onSave: (TeacherSession) -> Unit
             Text("Schedule Session", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(20.dp))
-
         Text("Session Title *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         OutlinedTextField(value = title, onValueChange = { title = it }, placeholder = { Text("e.g. Live Q&A: Design Principles") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
-
         Spacer(Modifier.height(12.dp))
         Text("Date *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         OutlinedTextField(value = date, onValueChange = { date = it }, placeholder = { Text("YYYY-MM-DD") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
-
         Spacer(Modifier.height(12.dp))
         Text("Time *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         OutlinedTextField(value = time, onValueChange = { time = it }, placeholder = { Text("e.g. 10:00 AM") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
-
         Spacer(Modifier.height(12.dp))
         Text("Duration", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         var expanded by remember { mutableStateOf(false) }
@@ -449,7 +477,6 @@ fun TeacherAddSessionScreen(onBack: () -> Unit, onSave: (TeacherSession) -> Unit
                 listOf("30 min", "1 hour", "1.5 hours", "2 hours").forEach { d -> DropdownMenuItem(text = { Text(d) }, onClick = { duration = d; expanded = false }) }
             }
         }
-
         Spacer(Modifier.height(28.dp))
         Button(
             onClick = { if (title.isNotBlank() && date.isNotBlank() && time.isNotBlank()) onSave(TeacherSession(title, date, time, duration)) },
@@ -457,7 +484,6 @@ fun TeacherAddSessionScreen(onBack: () -> Unit, onSave: (TeacherSession) -> Unit
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)),
             enabled = title.isNotBlank() && date.isNotBlank() && time.isNotBlank()
         ) { Text("Schedule Session", fontWeight = FontWeight.SemiBold) }
-
         Spacer(Modifier.height(10.dp))
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth().height(44.dp)) { Text("Cancel") }
         Spacer(Modifier.height(32.dp))
@@ -465,7 +491,7 @@ fun TeacherAddSessionScreen(onBack: () -> Unit, onSave: (TeacherSession) -> Unit
 }
 
 // ══════════════════════════════════════════════════════════════
-//  BID DETAILS PAGE
+//  BID DETAILS
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherBidDetailsScreen(onBack: () -> Unit) {
@@ -482,7 +508,7 @@ fun TeacherBidDetailsScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Student Information", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Spacer(Modifier.height(8.dp))
-                Text("Name: Alex Johnson", fontSize = 12.sp); Text("Rating: 4.8/5 ⭐", fontSize = 12.sp); Text("Previous Bids: 5", fontSize = 12.sp)
+                Text("Rating: 4.8/5 ⭐", fontSize = 12.sp); Text("Previous Bids: 5", fontSize = 12.sp)
             }
         }
         Spacer(Modifier.height(14.dp))
@@ -509,7 +535,7 @@ fun TeacherBidDetailsScreen(onBack: () -> Unit) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  EARNINGS DETAILS PAGE (actually opens now)
+//  EARNINGS DETAILS
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
@@ -544,30 +570,4 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
         }
         item { Spacer(Modifier.height(16.dp)) }
     }
-}
-
-// ── Helper composables (kept for compatibility) ──
-@Composable
-fun SelectDropdown(options: List<String>, onSelect: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedValue by remember { mutableStateOf(options.firstOrNull() ?: "") }
-    Box {
-        OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) { Text(selectedValue, modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { options.forEach { option -> DropdownMenuItem(text = { Text(option) }, onClick = { selectedValue = option; onSelect(option); expanded = false }) } }
-    }
-}
-@Composable
-fun PricingToggleButton(isPaid: Boolean, onToggle: (Boolean) -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = { onToggle(false) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (!isPaid) Color(0xFFEA2A33) else Color(0xFFF3F4F6))) { Text("Free", color = if (!isPaid) Color.White else Color.Black) }
-        Button(onClick = { onToggle(true) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (isPaid) Color(0xFFEA2A33) else Color(0xFFF3F4F6))) { Text("Paid", color = if (isPaid) Color.White else Color.Black) }
-    }
-}
-@Composable
-fun TabButton(title: String, isActive: Boolean, onClick: () -> Unit) {
-    Button(onClick = onClick, colors = ButtonDefaults.buttonColors(containerColor = if (isActive) Color(0xFFEA2A33) else Color.Transparent)) { Text(title, color = if (isActive) Color.White else Color.Black) }
-}
-@Composable
-fun TabButtonBid(title: String, isActive: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(onClick = onClick, modifier = modifier, colors = ButtonDefaults.buttonColors(containerColor = if (isActive) Color(0xFFEA2A33) else Color.Transparent)) { Text(title, color = if (isActive) Color.White else Color.Black) }
 }

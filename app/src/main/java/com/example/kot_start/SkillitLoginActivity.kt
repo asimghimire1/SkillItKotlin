@@ -1,4 +1,4 @@
-package com.example.kot_start
+﻿package com.example.kot_start
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -196,7 +196,7 @@ fun SkillitLoginBody() {
                         value = password,
                         onValueChange = { password = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("••••••••", color = Color.LightGray) },
+                        placeholder = { Text("â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", color = Color.LightGray) },
                         visualTransformation = if (passwordVisibility)
                             VisualTransformation.None
                         else
@@ -334,83 +334,11 @@ fun SkillitLoginBody() {
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("→", fontSize = 20.sp, color = Color.White)
+                            Text("â†’", fontSize = 20.sp, color = Color.White)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
-
-                    // Divider
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
-                        Text(
-                            "Or continue with",
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            style = TextStyle(fontSize = 14.sp, color = Color.Gray)
-                        )
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Social Login
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                Toast.makeText(context, "Google login coming soon", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.gmail),
-                                contentDescription = "Google",
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "Google",
-                                style = TextStyle(
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                )
-                            )
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                Toast.makeText(context, "Apple login coming soon", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
-                        ) {
-                            Text("", style = TextStyle(fontSize = 24.sp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "Apple",
-                                style = TextStyle(
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
 
                     // Sign Up Link
                     Text(

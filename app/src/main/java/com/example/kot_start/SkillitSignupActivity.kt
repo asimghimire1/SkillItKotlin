@@ -1,4 +1,4 @@
-package com.example.kot_start
+﻿package com.example.kot_start
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -109,7 +109,7 @@ fun SkillitSignupBody() {
                         .clickable { activity.finish() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("←", fontSize = 24.sp, color = Color.Black)
+                    Text("â†", fontSize = 24.sp, color = Color.Black)
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -196,14 +196,14 @@ fun SkillitSignupBody() {
             ) {
                 RoleCard(
                     modifier = Modifier.weight(1f),
-                    icon = "🎓",
+                    icon = "ðŸŽ“",
                     label = "Learn",
                     isSelected = selectedRole == "Learn",
                     onClick = { selectedRole = "Learn" }
                 )
                 RoleCard(
                     modifier = Modifier.weight(1f),
-                    icon = "📡",
+                    icon = "ðŸ“¡",
                     label = "Teach",
                     isSelected = selectedRole == "Teach",
                     onClick = { selectedRole = "Teach" }
@@ -377,61 +377,13 @@ fun SkillitSignupBody() {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE63946))
             ) {
                 Text(
-                    "Create Account  →",
+                    "Create Account  â†’",
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Or continue with
-            Text(
-                "Or continue with",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Social Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        Toast.makeText(context, "Google signup coming soon", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
-                ) {
-                    Text("G", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Google", fontWeight = FontWeight.Medium, color = Color.Black)
-                }
-
-                OutlinedButton(
-                    onClick = {
-                        Toast.makeText(context, "Apple signup coming soon", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
-                ) {
-                    Text("", fontSize = 20.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Apple", fontWeight = FontWeight.Medium, color = Color.Black)
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -501,7 +453,7 @@ fun RoleCard(
                             .background(Color(0xFFE63946), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("✓", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("âœ“", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                 }

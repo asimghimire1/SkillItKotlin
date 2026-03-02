@@ -5,7 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,6 @@ class StudentDashboardActivity : ComponentActivity() {
     }
 }
 
-// ── State holders ──
 data class EnrolledCourse(val name: String, val price: String)
 
 @Composable
@@ -48,8 +50,16 @@ fun StudentApp() {
     val context = LocalContext.current
     var walletBalance by remember { mutableStateOf(1245.75) }
     val enrolledCourses = remember { mutableStateListOf<String>() }
-    // which course index the student is viewing
     var viewingCourseIndex by remember { mutableStateOf(0) }
+
+    // Handle back: sub-screens → main, main → stay (don't logout)
+    BackHandler {
+        when (currentScreen) {
+            "main" -> { /* stay on dashboard */ }
+            "video_player" -> { currentScreen = "course_details" }
+            else -> { currentScreen = "main" }
+        }
+    }
 
     when (currentScreen) {
         "main" -> StudentMainScreen(
@@ -125,7 +135,11 @@ fun StudentMainScreen(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.School, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(22.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "SkillIt",
+                            modifier = Modifier.size(28.dp)
+                        )
                         Spacer(Modifier.width(8.dp))
                         Text("SkillIt", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
                     }
@@ -175,16 +189,14 @@ fun StudentMainScreen(
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 0 – HOME  (wallet card + Add Credits + stats)
+//  TAB 0 – HOME (no names, just "Welcome back!")
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentHomeTab(ctx: android.content.Context, balance: Double, nav: (String) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text("Welcome back!", fontSize = 16.sp, color = Color.Gray)
-            Text("Alex Johnson", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("Welcome back!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
-        // Wallet card
         item {
             Card(modifier = Modifier.fillMaxWidth().clickable { nav("wallet_details") }, colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -220,32 +232,76 @@ fun StudentHomeTab(ctx: android.content.Context, balance: Double, nav: (String) 
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 1 – LEARN  (browse courses, tap to view, enroll state)
+//  TAB 1 – LEARN (two sub-sections: Browse Content + Sessions)
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onViewCourse: (Int) -> Unit) {
+    var subTab by remember { mutableStateOf(0) } // 0 = Browse Content, 1 = Sessions
+
     val courseNames = listOf("Advanced UI/UX Design", "Kotlin for Android", "Brand Strategy 101", "Mobile Photography")
     val coursePrices = listOf("$40", "$55", "$70", "$85")
     val courseTeachers = listOf("Prof. Sarah", "Prof. Mike", "Prof. Lisa", "Prof. Raj")
 
+    val sessionTitles = listOf("Live Q&A: Design Principles", "Kotlin Workshop", "Brand Building Session")
+    val sessionDates = listOf("2026-03-05", "2026-03-08", "2026-03-12")
+    val sessionTimes = listOf("10:00 AM", "2:00 PM", "11:00 AM")
+
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Browse Courses", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-        items(courseNames.size) { i ->
-            val isEnrolled = enrolled.contains("course_$i")
-            Card(modifier = Modifier.fillMaxWidth().clickable { onViewCourse(i) }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(courseNames[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                            Text("By ${courseTeachers[i]}", fontSize = 11.sp, color = Color.Gray)
-                            Spacer(Modifier.height(4.dp))
-                            Text("⭐ 4.${7 + i % 3} (${120 + i * 50} reviews)", fontSize = 11.sp, color = Color(0xFFEA2A33))
+        item { Text("Learn", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        // Sub-tab switcher
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { subTab = 0 },
+                    modifier = Modifier.weight(1f).height(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (subTab == 0) Color(0xFFEA2A33) else Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text("Browse Content", fontSize = 12.sp, color = if (subTab == 0) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
+                Button(
+                    onClick = { subTab = 1 },
+                    modifier = Modifier.weight(1f).height(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (subTab == 1) Color(0xFFEA2A33) else Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text("Sessions", fontSize = 12.sp, color = if (subTab == 1) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
+            }
+        }
+
+        if (subTab == 0) {
+            // ── Browse Content ──
+            items(courseNames.size) { i ->
+                val isEnrolled = enrolled.contains("course_$i")
+                Card(modifier = Modifier.fillMaxWidth().clickable { onViewCourse(i) }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(courseNames[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                Text("By ${courseTeachers[i]}", fontSize = 11.sp, color = Color.Gray)
+                                Spacer(Modifier.height(4.dp))
+                                Text("⭐ 4.${7 + i % 3} (${120 + i * 50} reviews)", fontSize = 11.sp, color = Color(0xFFEA2A33))
+                            }
+                            Text(coursePrices[i], fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), fontSize = 16.sp)
                         }
-                        Text(coursePrices[i], fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), fontSize = 16.sp)
+                        Spacer(Modifier.height(10.dp))
+                        Surface(color = if (isEnrolled) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFFEA2A33).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                            Text(if (isEnrolled) "✓ Enrolled" else "Available", fontSize = 10.sp, color = if (isEnrolled) Color(0xFF10B981) else Color(0xFFEA2A33), modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                        }
                     }
-                    Spacer(Modifier.height(10.dp))
-                    Surface(color = if (isEnrolled) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFFEA2A33).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
-                        Text(if (isEnrolled) "✓ Enrolled" else "Available", fontSize = 10.sp, color = if (isEnrolled) Color(0xFF10B981) else Color(0xFFEA2A33), modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                }
+            }
+        } else {
+            // ── Sessions ──
+            items(sessionTitles.size) { i ->
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(28.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(sessionTitles[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text("${sessionDates[i]} • ${sessionTimes[i]}", fontSize = 11.sp, color = Color.Gray)
+                        }
+                        Surface(color = Color(0xFF10B981).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                            Text("Upcoming", fontSize = 10.sp, color = Color(0xFF10B981), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                        }
                     }
                 }
             }
@@ -254,15 +310,13 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 2 – BIDS  (bid on paid courses with slider/scroll)
+//  TAB 2 – BIDS
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6))) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { Text("My Bids", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-
-            // Existing bids
             items(3) { i ->
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -285,7 +339,6 @@ fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
             }
             item { Spacer(Modifier.height(72.dp)) }
         }
-        // FAB to make new bid
         FloatingActionButton(onClick = { nav("make_bid") }, containerColor = Color(0xFFEA2A33), modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)) {
             Icon(Icons.Default.Add, contentDescription = "New Bid", tint = Color.White)
         }
@@ -293,7 +346,7 @@ fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TAB 3 – WALLET  (opens wallet detail page + add credits)
+//  TAB 3 – WALLET
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String) -> Unit) {
@@ -335,7 +388,7 @@ fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String
 }
 
 // ══════════════════════════════════════════════════════════════
-//  ADD CREDITS PAGE  (actually works – updates wallet)
+//  ADD CREDITS PAGE
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCredits: (Double) -> Unit) {
@@ -349,20 +402,15 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
             Text("Add Credits", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(16.dp))
-
-        // Current balance
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(12.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Current Balance", fontSize = 12.sp, color = Color.White)
                 Text("$${"%.2f".format(currentBalance)}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
-
         Spacer(Modifier.height(20.dp))
         Text("Select Amount", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         Spacer(Modifier.height(10.dp))
-
-        // Preset amounts grid (2 columns)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             for (row in presets.chunked(3)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -373,24 +421,14 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
                             modifier = Modifier.weight(1f).height(48.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = if (isSelected) Color(0xFFEA2A33) else Color.White),
                             shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text("$${"%.0f".format(amount)}", color = if (isSelected) Color.White else Color.Black, fontWeight = FontWeight.SemiBold)
-                        }
+                        ) { Text("$${"%.0f".format(amount)}", color = if (isSelected) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
                     }
                 }
             }
         }
-
         Spacer(Modifier.height(16.dp))
         Text("Or enter custom amount", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-        OutlinedTextField(
-            value = customAmount,
-            onValueChange = { customAmount = it; selectedAmount = 0.0 },
-            placeholder = { Text("Custom amount") },
-            prefix = { Text("$") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
-        )
-
+        OutlinedTextField(value = customAmount, onValueChange = { customAmount = it; selectedAmount = 0.0 }, placeholder = { Text("Custom amount") }, prefix = { Text("$") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
         Spacer(Modifier.height(16.dp))
         Text("Payment Method", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         Spacer(Modifier.height(8.dp))
@@ -405,7 +443,6 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
                 ) { Text(label, fontSize = 10.sp, color = if (method == key) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
             }
         }
-
         Spacer(Modifier.height(24.dp))
         val finalAmount = if (customAmount.isNotBlank()) customAmount.toDoubleOrNull() ?: 0.0 else selectedAmount
         Button(
@@ -413,10 +450,7 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
             modifier = Modifier.fillMaxWidth().height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)),
             enabled = finalAmount > 0
-        ) {
-            Text("Add $${"%.2f".format(finalAmount)} to Wallet", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-        }
-
+        ) { Text("Add $${"%.2f".format(finalAmount)} to Wallet", fontWeight = FontWeight.SemiBold, fontSize = 15.sp) }
         Spacer(Modifier.height(10.dp))
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth().height(44.dp)) { Text("Cancel") }
         Spacer(Modifier.height(24.dp))
@@ -424,7 +458,7 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
 }
 
 // ══════════════════════════════════════════════════════════════
-//  COURSE DETAILS  (enroll button → shows Enrolled, watch video)
+//  COURSE DETAILS
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () -> Unit, onEnroll: () -> Unit, onWatchVideo: () -> Unit) {
@@ -440,7 +474,6 @@ fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () 
                 Text("Course Details", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
-        // Video banner (tap to open player)
         item {
             Card(modifier = Modifier.fillMaxWidth().height(200.dp).clickable { if (isEnrolled) onWatchVideo() }, colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)), shape = RoundedCornerShape(12.dp)) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -454,7 +487,6 @@ fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () 
         }
         item {
             Text(name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text("By Professor Sarah", fontSize = 12.sp, color = Color.Gray)
             Text("⭐ 4.8 (234 reviews)", fontSize = 12.sp, color = Color(0xFFEA2A33))
         }
         item {
@@ -504,18 +536,16 @@ fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () 
 }
 
 // ══════════════════════════════════════════════════════════════
-//  VIDEO PLAYER  (YouTube-style portrait, back button)
+//  VIDEO PLAYER (YouTube-style)
 // ══════════════════════════════════════════════════════════════
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentVideoPlayerScreen(onBack: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        // Top bar
         Row(modifier = Modifier.fillMaxWidth().background(Color.Black).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White) }
             Text("Now Playing", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
-        // Video area
         Box(modifier = Modifier.fillMaxWidth().weight(1f).background(Color(0xFF1A1A2E)), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Default.PlayCircle, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(80.dp))
@@ -525,9 +555,7 @@ fun StudentVideoPlayerScreen(onBack: () -> Unit) {
                 Text("Video content would load here", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
             }
         }
-        // Progress bar placeholder
         LinearProgressIndicator(progress = { 0.35f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFFEA2A33), trackColor = Color.Gray)
-        // Controls
         Row(modifier = Modifier.fillMaxWidth().background(Color(0xFF111111)).padding(12.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = {}) { Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White) }
             IconButton(onClick = {}) { Icon(Icons.Default.Replay10, contentDescription = "Rewind", tint = Color.White) }
@@ -539,16 +567,15 @@ fun StudentVideoPlayerScreen(onBack: () -> Unit) {
             IconButton(onClick = {}) { Icon(Icons.Default.Forward10, contentDescription = "Forward", tint = Color.White) }
             IconButton(onClick = {}) { Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White) }
         }
-        // Info section
         Column(modifier = Modifier.fillMaxWidth().background(Color(0xFF1A1A1A)).padding(16.dp)) {
             Text("Advanced UI/UX Design", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text("Professor Sarah • Lesson 1 of 12", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+            Text("Lesson 1 of 12", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
         }
     }
 }
 
 // ══════════════════════════════════════════════════════════════
-//  MAKE BID  (select course, slide price, submit)
+//  MAKE BID
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit) {
@@ -563,33 +590,25 @@ fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit)
             Text("Make a Bid", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(20.dp))
-
         Text("Select Course", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) { Text(selectedCourse, modifier = Modifier.weight(1f), textAlign = TextAlign.Start, fontSize = 12.sp); Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { courses.forEach { c -> DropdownMenuItem(text = { Text(c, fontSize = 12.sp) }, onClick = { selectedCourse = c; expanded = false }) } }
         }
-
         Spacer(Modifier.height(20.dp))
         Text("Your Bid Price", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         Spacer(Modifier.height(8.dp))
         Text("$${"%.0f".format(bidPrice)}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-
         Slider(
-            value = bidPrice,
-            onValueChange = { bidPrice = it },
-            valueRange = 5f..200f,
-            steps = 38,
+            value = bidPrice, onValueChange = { bidPrice = it }, valueRange = 5f..200f, steps = 38,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             colors = SliderDefaults.colors(thumbColor = Color(0xFFEA2A33), activeTrackColor = Color(0xFFEA2A33))
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("$5", fontSize = 11.sp, color = Color.Gray); Text("$200", fontSize = 11.sp, color = Color.Gray) }
-
         Spacer(Modifier.height(16.dp))
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)), shape = RoundedCornerShape(8.dp)) {
             Text("Tip: Competitive bids have a higher chance of being accepted!", fontSize = 11.sp, color = Color(0xFFB45309), modifier = Modifier.padding(12.dp))
         }
-
         Spacer(Modifier.height(28.dp))
         Button(onClick = { onSubmit(selectedCourse, "${"%.0f".format(bidPrice)}") }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))) {
             Text("Submit Bid", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
@@ -601,7 +620,7 @@ fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit)
 }
 
 // ══════════════════════════════════════════════════════════════
-//  WALLET DETAILS PAGE   (actually opens now)
+//  WALLET DETAILS
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits: () -> Unit) {
