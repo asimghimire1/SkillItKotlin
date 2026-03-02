@@ -189,7 +189,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
             ) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Total Earnings", fontSize = 13.sp, color = Color.White)
-                    Text("$4,280.50", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Rs 4,280.50", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Button(
                         onClick = { nav("earnings_details") },
                         modifier = Modifier.fillMaxWidth(),
@@ -227,9 +227,9 @@ fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uplo
     var subTab by remember { mutableStateOf(0) } // 0 = My Content, 1 = My Sessions
 
     val demo = listOf(
-        TeacherContent("UI/UX Fundamentals", "Learn design basics", "Design", "$29", true),
+        TeacherContent("UI/UX Fundamentals", "Learn design basics", "Design", "Rs 29", true),
         TeacherContent("Kotlin Crash Course", "Android dev essentials", "Technology", "Free", false),
-        TeacherContent("Brand Strategy", "Marketing your brand", "Business", "$19", true),
+        TeacherContent("Brand Strategy", "Marketing your brand", "Business", "Rs 19", true),
     )
     val allContent = demo + uploaded
 
@@ -324,22 +324,114 @@ fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uplo
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
+    val bidStates = remember { mutableStateMapOf<Int, String>() } // "accepted" or "countered"
+    val counterValues = remember { mutableStateMapOf<Int, Float>() }
+    var showCounterDialog by remember { mutableStateOf(-1) } // -1 = no dialog, else bid index
+
+    // Counter offer dialog
+    if (showCounterDialog >= 0) {
+        val idx = showCounterDialog
+        var counterPrice by remember { mutableStateOf(counterValues[idx] ?: 45f) }
+        AlertDialog(
+            onDismissRequest = { showCounterDialog = -1 },
+            title = { Text("Counter Offer", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Student offered Rs ${40 + idx * 5}", fontSize = 13.sp, color = Color.Gray)
+                    Spacer(Modifier.height(12.dp))
+                    Text("Your Counter Price", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Rs ${"%.0f".format(counterPrice)}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
+                    Slider(
+                        value = counterPrice,
+                        onValueChange = { counterPrice = it },
+                        valueRange = 5f..200f,
+                        steps = 38,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = SliderDefaults.colors(thumbColor = Color(0xFFEA2A33), activeTrackColor = Color(0xFFEA2A33))
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Rs 5", fontSize = 10.sp, color = Color.Gray)
+                        Text("Rs 200", fontSize = 10.sp, color = Color.Gray)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        counterValues[idx] = counterPrice
+                        bidStates[idx] = "countered"
+                        Toast.makeText(ctx, "Counter offer of Rs ${"%.0f".format(counterPrice)} sent!", Toast.LENGTH_SHORT).show()
+                        showCounterDialog = -1
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))
+                ) { Text("Send Counter") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showCounterDialog = -1 }) { Text("Cancel") }
+            }
+        )
+    }
+
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Student Bids", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         items(3) { i ->
+            val state = bidStates[i]
             Card(modifier = Modifier.fillMaxWidth().clickable { nav("bid_details") }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Student ${i + 1} Offer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Text("Advanced Design Course", fontSize = 11.sp, color = Color.Gray)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Student ${i + 1} Offer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text("Advanced Design Course", fontSize = 11.sp, color = Color.Gray)
+                        }
+                        if (state != null) {
+                            Surface(
+                                color = if (state == "accepted") Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFF3B82F6).copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    if (state == "accepted") "Accepted" else "Countered",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (state == "accepted") Color(0xFF10B981) else Color(0xFF3B82F6),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column { Text("Offered", fontSize = 10.sp, color = Color.Gray); Text("$${40 + i * 5}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
-                        Text("Your Rate: $45", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.align(Alignment.CenterVertically))
+                        Column {
+                            Text("Offered", fontSize = 10.sp, color = Color.Gray)
+                            Text("Rs ${40 + i * 5}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33))
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("Your Rate", fontSize = 10.sp, color = Color.Gray)
+                            Text(if (state == "countered") "Rs ${"%.0f".format(counterValues[i] ?: 45f)}" else "Rs 45", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                     Spacer(modifier = Modifier.height(10.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { Toast.makeText(ctx, "Counter offer sent", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3F4F6))) { Text("Counter", fontSize = 11.sp, color = Color.Black) }
-                        Button(onClick = { Toast.makeText(ctx, "Bid accepted!", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))) { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Accept", fontSize = 11.sp) }
+                    if (state == "accepted") {
+                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF10B981).copy(alpha = 0.1f))) {
+                            Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Accepted", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            }
+                        }
+                    } else if (state == "countered") {
+                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF3B82F6).copy(alpha = 0.1f))) {
+                            Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color(0xFF3B82F6), modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Counter Sent - Rs ${"%.0f".format(counterValues[i] ?: 45f)}", color = Color(0xFF3B82F6), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            }
+                        }
+                    } else {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { showCounterDialog = i }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF3F4F6))) { Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Counter", fontSize = 11.sp, color = Color.Black) }
+                            Button(onClick = { bidStates[i] = "accepted"; Toast.makeText(ctx, "Bid accepted!", Toast.LENGTH_SHORT).show() }, modifier = Modifier.weight(1f).height(38.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33))) { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Accept", fontSize = 11.sp) }
+                        }
                     }
                 }
             }
@@ -358,7 +450,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
             Card(modifier = Modifier.fillMaxWidth().clickable { nav("earnings_details") }, colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Total Available Balance", fontSize = 12.sp, color = Color.White)
-                    Text("$4,280.50", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Rs 4,280.50", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(onClick = { nav("earnings_details") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White)) { Icon(Icons.Default.Payment, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Withdraw", color = Color(0xFFEA2A33), fontSize = 12.sp) }
                         Button(onClick = { nav("earnings_details") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.3f))) { Icon(Icons.Default.History, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("History", color = Color.White, fontSize = 12.sp) }
@@ -375,7 +467,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                     Icon(when (i) { 0 -> Icons.Default.AccountBalanceWallet; 1 -> Icons.Default.MenuBook; else -> Icons.Default.TrendingUp }, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) { Text(txLabels[i], fontWeight = FontWeight.SemiBold, fontSize = 13.sp); Text("2 days ago", fontSize = 11.sp, color = Color.Gray) }
-                    Text("+$${txAmounts[i]}", fontWeight = FontWeight.SemiBold, color = Color(0xFF10B981), fontSize = 13.sp)
+                    Text("+Rs ${txAmounts[i]}", fontWeight = FontWeight.SemiBold, color = Color(0xFF10B981), fontSize = 13.sp)
                 }
             }
         }
@@ -419,7 +511,7 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
             Button(onClick = { isPaid = true }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (isPaid) Color(0xFFEA2A33) else Color(0xFFF3F4F6))) { Text("Paid", color = if (isPaid) Color.White else Color.Black) }
         }
         if (isPaid) {
-            OutlinedTextField(value = price, onValueChange = { price = it }, placeholder = { Text("Price in $") }, prefix = { Text("$") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
+            OutlinedTextField(value = price, onValueChange = { price = it }, placeholder = { Text("Price in Rs") }, prefix = { Text("Rs ") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
         }
         Spacer(Modifier.height(16.dp))
         Card(modifier = Modifier.fillMaxWidth().height(120.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F4F6)), shape = RoundedCornerShape(12.dp)) {
@@ -433,7 +525,7 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
         }
         Spacer(Modifier.height(24.dp))
         Button(
-            onClick = { if (title.isNotBlank()) onSave(TeacherContent(title, desc.ifBlank { "No description" }, category, if (isPaid) "$$price" else "Free", isPaid)) },
+            onClick = { if (title.isNotBlank()) onSave(TeacherContent(title, desc.ifBlank { "No description" }, category, if (isPaid) "Rs $price" else "Free", isPaid)) },
             modifier = Modifier.fillMaxWidth().height(48.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)),
             enabled = title.isNotBlank()
@@ -515,9 +607,9 @@ fun TeacherBidDetailsScreen(onBack: () -> Unit) {
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Price Comparison", fontWeight = FontWeight.Bold, fontSize = 14.sp); Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Your Rate:", fontSize = 12.sp); Text("$45", fontWeight = FontWeight.Bold) }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Student Offer:", fontSize = 12.sp); Text("$40", fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Difference:", fontSize = 12.sp); Text("-$5", fontWeight = FontWeight.Bold, color = Color.Red) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Your Rate:", fontSize = 12.sp); Text("Rs 45", fontWeight = FontWeight.Bold) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Student Offer:", fontSize = 12.sp); Text("Rs 40", fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Difference:", fontSize = 12.sp); Text("-Rs 5", fontWeight = FontWeight.Bold, color = Color.Red) }
             }
         }
         Spacer(Modifier.weight(1f))
@@ -550,7 +642,7 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text("Total Balance", fontSize = 12.sp, color = Color.White)
-                    Text("$4,280.50", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Rs 4,280.50", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.height(6.dp))
                     Text("Last Updated: Today at 2:30 PM", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
                 }
@@ -558,7 +650,7 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
         }
         item { Text("Income Breakdown", fontWeight = FontWeight.Bold, fontSize = 14.sp) }
         val breakLabels = listOf("Courses", "Live Sessions", "Consultations")
-        val breakValues = listOf("$2,840", "$1,200", "$240")
+        val breakValues = listOf("Rs 2,840", "Rs 1,200", "Rs 240")
         val breakCounts = listOf("8", "5", "12")
         items(breakLabels.size) { i ->
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {

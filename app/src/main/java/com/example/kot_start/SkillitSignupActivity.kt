@@ -61,6 +61,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import com.example.kot_start.model.UserModel
 import com.example.kot_start.repository.UserRepoImpl
 import com.example.kot_start.viewmodel.UserViewModel
@@ -109,7 +113,7 @@ fun SkillitSignupBody() {
                         .clickable { activity.finish() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("â†", fontSize = 24.sp, color = Color.Black)
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black, modifier = Modifier.size(24.dp))
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -196,14 +200,14 @@ fun SkillitSignupBody() {
             ) {
                 RoleCard(
                     modifier = Modifier.weight(1f),
-                    icon = "ðŸŽ“",
+                    icon = "",
                     label = "Learn",
                     isSelected = selectedRole == "Learn",
                     onClick = { selectedRole = "Learn" }
                 )
                 RoleCard(
                     modifier = Modifier.weight(1f),
-                    icon = "ðŸ“¡",
+                    icon = "",
                     label = "Teach",
                     isSelected = selectedRole == "Teach",
                     onClick = { selectedRole = "Teach" }
@@ -376,14 +380,21 @@ fun SkillitSignupBody() {
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE63946))
             ) {
-                Text(
-                    "Create Account  â†’",
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "Create Account",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     )
-                )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -453,13 +464,15 @@ fun RoleCard(
                             .background(Color(0xFFE63946), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("âœ“", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                 }
 
-                Text(icon, fontSize = 32.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+                if (icon.isNotBlank()) {
+                    Text(icon, fontSize = 32.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 Text(
                     label,
                     style = TextStyle(

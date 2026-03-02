@@ -63,6 +63,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import com.example.kot_start.repository.UserRepoImpl
 import com.example.kot_start.viewmodel.UserViewModel
 
@@ -139,7 +141,7 @@ fun SkillitLoginBody() {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        "Log in to start swapping skills",
+                        "Explore skilled content and sessions",
                         style = TextStyle(
                             fontSize = 16.sp,
                             color = Color.Gray
@@ -196,7 +198,7 @@ fun SkillitLoginBody() {
                         value = password,
                         onValueChange = { password = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", color = Color.LightGray) },
+                        placeholder = { Text("Enter password", color = Color.LightGray) },
                         visualTransformation = if (passwordVisibility)
                             VisualTransformation.None
                         else
@@ -308,7 +310,13 @@ fun SkillitLoginBody() {
                                             Toast.makeText(context, "Unable to get user ID", Toast.LENGTH_SHORT).show()
                                         }
                                     } else {
-                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                        val errorMsg = when {
+                                            msg.contains("password", ignoreCase = true) || msg.contains("credential", ignoreCase = true) -> "The password is incorrect"
+                                            msg.contains("no user record", ignoreCase = true) || msg.contains("user may have been deleted", ignoreCase = true) -> "This email doesn't exist."
+                                            msg.contains("badly formatted", ignoreCase = true) -> "Please enter a valid email address"
+                                            else -> msg
+                                        }
+                                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -334,7 +342,7 @@ fun SkillitLoginBody() {
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("â†’", fontSize = 20.sp, color = Color.White)
+                            Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                         }
                     }
 

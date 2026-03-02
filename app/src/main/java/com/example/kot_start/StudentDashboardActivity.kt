@@ -82,7 +82,7 @@ fun StudentApp() {
             onBack = { currentScreen = "main" },
             onAddCredits = { amount ->
                 walletBalance += amount
-                Toast.makeText(context, "$${"%.2f".format(amount)} added to wallet!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Rs ${"%.2f".format(amount)} added to wallet!", Toast.LENGTH_SHORT).show()
                 currentScreen = "main"
             }
         )
@@ -100,7 +100,7 @@ fun StudentApp() {
         "make_bid" -> StudentMakeBidScreen(
             onBack = { currentScreen = "main"; selectedTab = 2 },
             onSubmit = { courseName, bidPrice ->
-                Toast.makeText(context, "Bid of $$bidPrice placed on $courseName!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Bid of Rs $bidPrice placed on $courseName!", Toast.LENGTH_SHORT).show()
                 currentScreen = "main"; selectedTab = 2
             }
         )
@@ -201,7 +201,7 @@ fun StudentHomeTab(ctx: android.content.Context, balance: Double, nav: (String) 
             Card(modifier = Modifier.fillMaxWidth().clickable { nav("wallet_details") }, colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Wallet Balance", fontSize = 13.sp, color = Color.White)
-                    Text("$${"%.2f".format(balance)}", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Rs ${"%.2f".format(balance)}", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = { nav("add_credits") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(16.dp))
@@ -239,7 +239,7 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
     var subTab by remember { mutableStateOf(0) } // 0 = Browse Content, 1 = Sessions
 
     val courseNames = listOf("Advanced UI/UX Design", "Kotlin for Android", "Brand Strategy 101", "Mobile Photography")
-    val coursePrices = listOf("$40", "$55", "$70", "$85")
+    val coursePrices = listOf("Rs 40", "Rs 55", "Rs 70", "Rs 85")
     val courseTeachers = listOf("Prof. Sarah", "Prof. Mike", "Prof. Lisa", "Prof. Raj")
 
     val sessionTitles = listOf("Live Q&A: Design Principles", "Kotlin Workshop", "Brand Building Session")
@@ -331,8 +331,8 @@ fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                         }
                         Spacer(Modifier.height(10.dp))
                         Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column { Text("Your Bid", fontSize = 10.sp, color = Color.Gray); Text("$${35 + i * 5}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
-                            Text("vs $${45 + i * 5}", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.align(Alignment.CenterVertically))
+                            Column { Text("Your Bid", fontSize = 10.sp, color = Color.Gray); Text("Rs ${35 + i * 5}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
+                            Text("vs Rs ${45 + i * 5}", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.align(Alignment.CenterVertically))
                         }
                     }
                 }
@@ -356,7 +356,7 @@ fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String
             Card(modifier = Modifier.fillMaxWidth().clickable { nav("wallet_details") }, colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Available Balance", fontSize = 12.sp, color = Color.White)
-                    Text("$${"%.2f".format(balance)}", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Rs ${"%.2f".format(balance)}", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(onClick = { nav("add_credits") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp))
@@ -372,7 +372,7 @@ fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String
         }
         item { Text("Recent Transactions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp) }
         val txLabels = listOf("Added Funds", "Course Purchase", "Referral Bonus", "Course Fee")
-        val txAmounts = listOf("+$50.00", "-$40.00", "+$25.00", "-$55.00")
+        val txAmounts = listOf("+Rs 50.00", "-Rs 40.00", "+Rs 25.00", "-Rs 55.00")
         val txColors = listOf(Color(0xFF10B981), Color.Red, Color(0xFF10B981), Color.Red)
         items(txLabels.size) { i ->
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
@@ -405,7 +405,7 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(12.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Current Balance", fontSize = 12.sp, color = Color.White)
-                Text("$${"%.2f".format(currentBalance)}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Rs ${"%.2f".format(currentBalance)}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
         Spacer(Modifier.height(20.dp))
@@ -421,14 +421,14 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
                             modifier = Modifier.weight(1f).height(48.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = if (isSelected) Color(0xFFEA2A33) else Color.White),
                             shape = RoundedCornerShape(10.dp)
-                        ) { Text("$${"%.0f".format(amount)}", color = if (isSelected) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
+                        ) { Text("Rs ${"%.0f".format(amount)}", color = if (isSelected) Color.White else Color.Black, fontWeight = FontWeight.SemiBold) }
                     }
                 }
             }
         }
         Spacer(Modifier.height(16.dp))
         Text("Or enter custom amount", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-        OutlinedTextField(value = customAmount, onValueChange = { customAmount = it; selectedAmount = 0.0 }, placeholder = { Text("Custom amount") }, prefix = { Text("$") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
+        OutlinedTextField(value = customAmount, onValueChange = { customAmount = it; selectedAmount = 0.0 }, placeholder = { Text("Custom amount") }, prefix = { Text("Rs ") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
         Spacer(Modifier.height(16.dp))
         Text("Payment Method", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         Spacer(Modifier.height(8.dp))
@@ -450,7 +450,7 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
             modifier = Modifier.fillMaxWidth().height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)),
             enabled = finalAmount > 0
-        ) { Text("Add $${"%.2f".format(finalAmount)} to Wallet", fontWeight = FontWeight.SemiBold, fontSize = 15.sp) }
+        ) { Text("Add Rs ${"%.2f".format(finalAmount)} to Wallet", fontWeight = FontWeight.SemiBold, fontSize = 15.sp) }
         Spacer(Modifier.height(10.dp))
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth().height(44.dp)) { Text("Cancel") }
         Spacer(Modifier.height(24.dp))
@@ -463,9 +463,9 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
 @Composable
 fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () -> Unit, onEnroll: () -> Unit, onWatchVideo: () -> Unit) {
     val names = listOf("Advanced UI/UX Design", "Kotlin for Android", "Brand Strategy 101", "Mobile Photography")
-    val prices = listOf("$40", "$55", "$70", "$85")
+    val prices = listOf("Rs 40", "Rs 55", "Rs 70", "Rs 85")
     val name = names.getOrElse(courseIndex) { "Course" }
-    val price = prices.getOrElse(courseIndex) { "$50" }
+    val price = prices.getOrElse(courseIndex) { "Rs 50" }
 
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
@@ -579,7 +579,7 @@ fun StudentVideoPlayerScreen(onBack: () -> Unit) {
 // ══════════════════════════════════════════════════════════════
 @Composable
 fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit) {
-    val courses = listOf("Advanced UI/UX Design ($40)", "Kotlin for Android ($55)", "Brand Strategy 101 ($70)", "Mobile Photography ($85)")
+    val courses = listOf("Advanced UI/UX Design (Rs 40)", "Kotlin for Android (Rs 55)", "Brand Strategy 101 (Rs 70)", "Mobile Photography (Rs 85)")
     var selectedCourse by remember { mutableStateOf(courses[0]) }
     var bidPrice by remember { mutableStateOf(30f) }
     var expanded by remember { mutableStateOf(false) }
@@ -598,13 +598,13 @@ fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit)
         Spacer(Modifier.height(20.dp))
         Text("Your Bid Price", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         Spacer(Modifier.height(8.dp))
-        Text("$${"%.0f".format(bidPrice)}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Text("Rs ${"%.0f".format(bidPrice)}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         Slider(
             value = bidPrice, onValueChange = { bidPrice = it }, valueRange = 5f..200f, steps = 38,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             colors = SliderDefaults.colors(thumbColor = Color(0xFFEA2A33), activeTrackColor = Color(0xFFEA2A33))
         )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("$5", fontSize = 11.sp, color = Color.Gray); Text("$200", fontSize = 11.sp, color = Color.Gray) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Rs 5", fontSize = 11.sp, color = Color.Gray); Text("Rs 200", fontSize = 11.sp, color = Color.Gray) }
         Spacer(Modifier.height(16.dp))
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)), shape = RoundedCornerShape(8.dp)) {
             Text("Tip: Competitive bids have a higher chance of being accepted!", fontSize = 11.sp, color = Color(0xFFB45309), modifier = Modifier.padding(12.dp))
@@ -635,7 +635,7 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text("Available Balance", fontSize = 12.sp, color = Color.White)
-                    Text("$${"%.2f".format(balance)}", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Rs ${"%.2f".format(balance)}", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.height(12.dp))
                     Button(onClick = onAddCredits, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
                         Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp))
@@ -646,7 +646,7 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
         }
         item { Text("Spending Summary", fontWeight = FontWeight.Bold, fontSize = 14.sp) }
         val summaryLabels = listOf("Spent on Courses", "Referral Earnings", "Total Added")
-        val summaryValues = listOf("$250.00", "$125.00", "$${"%.2f".format(balance + 250 - 125)}")
+        val summaryValues = listOf("Rs 250.00", "Rs 125.00", "Rs ${"%.2f".format(balance + 250 - 125)}")
         items(summaryLabels.size) { i ->
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -656,8 +656,8 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             }
         }
         item { Text("Transaction History", fontWeight = FontWeight.Bold, fontSize = 14.sp) }
-        val txLabels = listOf("Added $100", "Purchased Course", "Referral Bonus", "Added $50", "Course Fee")
-        val txAmounts = listOf("+$100.00", "-$40.00", "+$25.00", "+$50.00", "-$55.00")
+        val txLabels = listOf("Added Rs 100", "Purchased Course", "Referral Bonus", "Added Rs 50", "Course Fee")
+        val txAmounts = listOf("+Rs 100.00", "-Rs 40.00", "+Rs 25.00", "+Rs 50.00", "-Rs 55.00")
         val txColors = listOf(Color(0xFF10B981), Color.Red, Color(0xFF10B981), Color(0xFF10B981), Color.Red)
         items(txLabels.size) { i ->
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
