@@ -123,7 +123,7 @@ fun TeacherDashboardScreen(
                 },
                 actions = {
                     // Notification bell with badge
-                    BadgedBox(badge = { Badge(containerColor = Color(0xFFEA2A33)) { Text("3", fontSize = 9.sp, color = Color.White) } }) {
+                    BadgedBox(badge = { Badge(containerColor = Color(0xFFEA2A33)) }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color(0xFF6B7280))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -182,7 +182,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
     val tips = listOf(
         "Record shorter videos (5-10 min) for better engagement.",
         "Reply to student bids within 24 hours for higher ratings.",
-        "Add preview thumbnails to increase course enrollments.",
+        "Add preview thumbnails to increase skill enrollments.",
         "Schedule weekly live sessions to build a loyal audience."
     )
     val tipIndex = Calendar.getInstance().get(Calendar.DAY_OF_YEAR) % tips.size
@@ -268,7 +268,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
         // Quick Stats
         item { Text("Quick Stats", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
         val statIcons = listOf(Icons.Default.People, Icons.Default.MenuBook, Icons.Default.VideoCall)
-        val statLabels = listOf("Active Students", "Courses Published", "Sessions Done")
+        val statLabels = listOf("Active Learners", "Skills Shared", "Sessions Taught")
         val statValues = listOf("1,240", "6", "28")
         val statColors = listOf(Color(0xFF3B82F6), Color(0xFF10B981), Color(0xFFF59E0B))
         items(statLabels.size) { i ->
@@ -330,9 +330,9 @@ fun TeacherLearningTab(ctx: android.content.Context, nav: (String) -> Unit, uplo
     var searchQuery by remember { mutableStateOf("") }
 
     val demo = listOf(
-        TeacherContent("UI/UX Fundamentals", "Learn design basics", "Design", "Rs 29", true),
-        TeacherContent("Kotlin Crash Course", "Android dev essentials", "Technology", "Free", false),
-        TeacherContent("Brand Strategy", "Marketing your brand", "Business", "Rs 19", true),
+        TeacherContent("UI/UX Design Mastery", "Master modern interface design", "Design", "Rs 40", true),
+        TeacherContent("Kotlin Development", "Android development essentials", "Technology", "Rs 55", true),
+        TeacherContent("Brand Strategy Essentials", "Build and market your brand", "Business", "Rs 70", true),
     )
     val allContent = (demo + uploaded).filter {
         searchQuery.isBlank() || it.title.contains(searchQuery, ignoreCase = true) || it.category.contains(searchQuery, ignoreCase = true)
@@ -552,7 +552,7 @@ fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                             Spacer(Modifier.width(12.dp))
                             Column {
                                 Text("Student ${i + 1} Offer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
-                                Text("Advanced Design Course", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+                                Text("UI/UX Design Mastery", fontSize = 12.sp, color = Color(0xFF9CA3AF))
                             }
                         }
                         if (state != null) {
@@ -662,7 +662,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
             }
         }
         item { Text("Recent Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val txLabels = listOf("Withdrawal", "Course Sale", "Session Fee")
+        val txLabels = listOf("Withdrawal", "Skill Sale", "Session Fee")
         val txAmounts = listOf("100.00", "200.00", "300.00")
         val txIcons = listOf(Icons.Default.AccountBalanceWallet, Icons.Default.MenuBook, Icons.Default.TrendingUp)
         val txColors = listOf(Color(0xFFEF4444), Color(0xFF10B981), Color(0xFF10B981))
@@ -709,10 +709,10 @@ fun TeacherAddContentScreen(onBack: () -> Unit, onSave: (TeacherContent) -> Unit
         }
         Spacer(Modifier.height(20.dp))
         Text("Title *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF374151))
-        OutlinedTextField(value = title, onValueChange = { title = it }, placeholder = { Text("e.g. Advanced UI Design") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp))
+        OutlinedTextField(value = title, onValueChange = { title = it }, placeholder = { Text("e.g. UI/UX Design Mastery") }, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp))
         Spacer(Modifier.height(12.dp))
         Text("Description", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF374151))
-        OutlinedTextField(value = desc, onValueChange = { desc = it }, placeholder = { Text("What will students learn?") }, modifier = Modifier.fillMaxWidth().height(100.dp).padding(vertical = 6.dp), maxLines = 4, shape = RoundedCornerShape(12.dp))
+        OutlinedTextField(value = desc, onValueChange = { desc = it }, placeholder = { Text("What will learners gain?") }, modifier = Modifier.fillMaxWidth().height(100.dp).padding(vertical = 6.dp), maxLines = 4, shape = RoundedCornerShape(12.dp))
         Spacer(Modifier.height(12.dp))
         Text("Category", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF374151))
         var expanded by remember { mutableStateOf(false) }
@@ -786,7 +786,7 @@ fun TeacherAddSessionScreen(onBack: () -> Unit, onSave: (TeacherSession) -> Unit
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text(duration, modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                listOf("30 min", "1 hour", "1.5 hours", "2 hours").forEach { d -> DropdownMenuItem(text = { Text(d) }, onClick = { duration = d; expanded = false }) }
+                listOf("1 hour", "1.5 hours", "2 hours", "3 hours").forEach { d -> DropdownMenuItem(text = { Text(d) }, onClick = { duration = d; expanded = false }) }
             }
         }
         Spacer(Modifier.height(28.dp))
@@ -889,7 +889,7 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
             }
         }
         item { Text("Income Breakdown", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val breakLabels = listOf("Courses", "Live Sessions", "Consultations")
+        val breakLabels = listOf("Skills", "Live Sessions", "Mentoring")
         val breakValues = listOf("Rs 2,840", "Rs 1,200", "Rs 240")
         val breakCounts = listOf("8", "5", "12")
         val breakIcons = listOf(Icons.Default.MenuBook, Icons.Default.VideoCall, Icons.Default.Chat)

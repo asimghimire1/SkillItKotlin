@@ -47,6 +47,7 @@ class StudentDashboardActivity : ComponentActivity() {
 }
 
 data class EnrolledCourse(val name: String, val price: String)
+data class StudentBid(val skillName: String, val bidPrice: String, val originalPrice: String, val status: String = "Pending")
 
 @Composable
 fun StudentApp() {
@@ -55,7 +56,10 @@ fun StudentApp() {
     val context = LocalContext.current
     var walletBalance by remember { mutableStateOf(1245.75) }
     val enrolledCourses = remember { mutableStateListOf<String>() }
+    val studentBids = remember { mutableStateListOf<StudentBid>() }
     var viewingCourseIndex by remember { mutableStateOf(0) }
+
+    val skillPrices = listOf(40.0, 55.0, 70.0, 85.0)
 
     BackHandler {
         when (currentScreen) {
@@ -72,6 +76,7 @@ fun StudentApp() {
             onTabChange = { selectedTab = it },
             walletBalance = walletBalance,
             enrolledCourses = enrolledCourses,
+            studentBids = studentBids,
             onViewCourse = { idx -> viewingCourseIndex = idx; currentScreen = "course_details" },
             onLogout = {
                 Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
@@ -95,16 +100,25 @@ fun StudentApp() {
             isEnrolled = enrolledCourses.contains("course_$viewingCourseIndex"),
             onBack = { currentScreen = "main" },
             onEnroll = {
-                enrolledCourses.add("course_$viewingCourseIndex")
-                Toast.makeText(context, "Enrolled successfully!", Toast.LENGTH_SHORT).show()
+                val price = skillPrices.getOrElse(viewingCourseIndex) { 50.0 }
+                if (walletBalance >= price) {
+                    enrolledCourses.add("course_$viewingCourseIndex")
+                    walletBalance -= price
+                    Toast.makeText(context, "Enrolled! Rs ${"%.0f".format(price)} deducted from wallet.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Insufficient balance! Please add credits.", Toast.LENGTH_SHORT).show()
+                }
             },
             onWatchVideo = { currentScreen = "video_player" }
         )
         "video_player" -> StudentVideoPlayerScreen(onBack = { currentScreen = "course_details" })
         "make_bid" -> StudentMakeBidScreen(
             onBack = { currentScreen = "main"; selectedTab = 2 },
-            onSubmit = { courseName, bidPrice ->
-                Toast.makeText(context, "Bid of Rs $bidPrice placed on $courseName!", Toast.LENGTH_SHORT).show()
+            onSubmit = { skillName, bidPrice ->
+                val cleanName = skillName.substringBefore(" (Rs")
+                val originalPrice = skillName.substringAfter("(Rs ").substringBefore(")")
+                studentBids.add(StudentBid(cleanName, bidPrice, originalPrice))
+                Toast.makeText(context, "Bid of Rs $bidPrice placed on $cleanName!", Toast.LENGTH_SHORT).show()
                 currentScreen = "main"; selectedTab = 2
             }
         )
@@ -126,6 +140,7 @@ fun StudentMainScreen(
     onTabChange: (Int) -> Unit,
     walletBalance: Double,
     enrolledCourses: List<String>,
+    studentBids: List<StudentBid>,
     onViewCourse: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -142,7 +157,7 @@ fun StudentMainScreen(
                     }
                 },
                 actions = {
-                    BadgedBox(badge = { Badge(containerColor = Color(0xFFEA2A33)) { Text("2", fontSize = 9.sp, color = Color.White) } }) {
+                    BadgedBox(badge = { Badge(containerColor = Color(0xFFEA2A33)) }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color(0xFF6B7280))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -182,7 +197,7 @@ fun StudentMainScreen(
             when (selectedTab) {
                 0 -> StudentHomeTab(LocalContext.current, walletBalance, onScreenChange)
                 1 -> StudentLearnTab(LocalContext.current, enrolledCourses, onViewCourse)
-                2 -> StudentBidsTab(LocalContext.current, onScreenChange)
+                2 -> StudentBidsTab(LocalContext.current, onScreenChange, studentBids)
                 else -> StudentWalletTab(LocalContext.current, walletBalance, onScreenChange)
             }
         }
@@ -245,13 +260,13 @@ fun StudentHomeTab(ctx: android.content.Context, balance: Double, nav: (String) 
         }
         // Continue Learning section
         item { Text("Continue Learning", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
-        val courseProgress = listOf(
-            Triple("Advanced UI/UX Design", 0.65f, "Design"),
-            Triple("Kotlin for Android", 0.30f, "Technology"),
-            Triple("Brand Strategy 101", 0.85f, "Business")
+        val skillProgress = listOf(
+            Triple("UI/UX Design Mastery", 0.65f, "Design"),
+            Triple("Kotlin Development", 0.30f, "Technology"),
+            Triple("Brand Strategy Essentials", 0.85f, "Business")
         )
-        items(courseProgress.size) { i ->
-            val (name, progress, category) = courseProgress[i]
+        items(skillProgress.size) { i ->
+            val (name, progress, category) = skillProgress[i]
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -312,7 +327,7 @@ fun StudentHomeTab(ctx: android.content.Context, balance: Double, nav: (String) 
         // My Status
         item { Text("My Status", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
         val statIcons = listOf(Icons.Default.MenuBook, Icons.Default.LocalOffer, Icons.Default.CheckCircle)
-        val statLabels = listOf("Active Courses", "Pending Offers", "Completed")
+        val statLabels = listOf("Active Skills", "Pending Offers", "Completed")
         val statValues = listOf("5", "3", "12")
         val statColors = listOf(Color(0xFF3B82F6), Color(0xFFF59E0B), Color(0xFF10B981))
         items(statLabels.size) { i ->
@@ -350,20 +365,22 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = listOf("All", "Design", "Technology", "Business", "Lifestyle")
 
-    val courseNames = listOf("Advanced UI/UX Design", "Kotlin for Android", "Brand Strategy 101", "Mobile Photography")
-    val coursePrices = listOf("Rs 40", "Rs 55", "Rs 70", "Rs 85")
-    val courseTeachers = listOf("Prof. Sarah", "Prof. Mike", "Prof. Lisa", "Prof. Raj")
-    val courseCategories = listOf("Design", "Technology", "Business", "Lifestyle")
+    val skillNames = listOf("UI/UX Design Mastery", "Kotlin Development", "Brand Strategy Essentials", "Mobile Photography")
+    val skillPrices = listOf("Rs 40", "Rs 55", "Rs 70", "Rs 85")
+    val skillTeachers = listOf("Prof. Sarah", "Prof. Mike", "Prof. Lisa", "Prof. Raj")
+    val skillCategories = listOf("Design", "Technology", "Business", "Lifestyle")
+    val skillDurations = listOf("2 hours", "3 hours", "1.5 hours", "2 hours")
 
-    val filteredCourses = courseNames.indices.filter { i ->
-        val matchesSearch = searchQuery.isBlank() || courseNames[i].contains(searchQuery, ignoreCase = true)
-        val matchesCategory = selectedCategory == "All" || courseCategories[i] == selectedCategory
+    val filteredSkills = skillNames.indices.filter { i ->
+        val matchesSearch = searchQuery.isBlank() || skillNames[i].contains(searchQuery, ignoreCase = true)
+        val matchesCategory = selectedCategory == "All" || skillCategories[i] == selectedCategory
         matchesSearch && matchesCategory
     }
 
     val sessionTitles = listOf("Live Q&A: Design Principles", "Kotlin Workshop", "Brand Building Session")
     val sessionDates = listOf("2026-03-05", "2026-03-08", "2026-03-12")
     val sessionTimes = listOf("10:00 AM", "2:00 PM", "11:00 AM")
+    val sessionDurations = listOf("2 hours", "1.5 hours", "1 hour")
 
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Learn", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
@@ -374,7 +391,7 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search courses...", color = Color(0xFFD1D5DB)) },
+                placeholder = { Text("Search skills...", color = Color(0xFFD1D5DB)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(20.dp)) },
                 shape = RoundedCornerShape(14.dp),
                 colors = TextFieldDefaults.colors(
@@ -396,7 +413,7 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
                     colors = ButtonDefaults.buttonColors(containerColor = if (subTab == 0) Color(0xFFEA2A33) else Color.White),
                     shape = RoundedCornerShape(12.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = if (subTab == 0) 4.dp else 0.dp)
-                ) { Text("Browse Content", fontSize = 13.sp, color = if (subTab == 0) Color.White else Color(0xFF6B7280), fontWeight = FontWeight.SemiBold) }
+                ) { Text("Browse Skills", fontSize = 13.sp, color = if (subTab == 0) Color.White else Color(0xFF6B7280), fontWeight = FontWeight.SemiBold) }
                 Button(
                     onClick = { subTab = 1 },
                     modifier = Modifier.weight(1f).height(42.dp),
@@ -431,9 +448,9 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
                 }
             }
 
-            // Course cards
-            items(filteredCourses.size) { idx ->
-                val i = filteredCourses[idx]
+            // Skill cards
+            items(filteredSkills.size) { idx ->
+                val i = filteredSkills[idx]
                 val isEnrolled = enrolled.contains("course_$i")
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { onViewCourse(i) },
@@ -451,12 +468,12 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(courseNames[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
-                            Text("By ${courseTeachers[i]}", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+                            Text(skillNames[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
+                            Text("By ${skillTeachers[i]} \u2022 ${skillDurations[i]}", fontSize = 12.sp, color = Color(0xFF9CA3AF))
                             Spacer(Modifier.height(4.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Surface(color = Color(0xFFEA2A33).copy(alpha = 0.1f), shape = RoundedCornerShape(6.dp)) {
-                                    Text(courseCategories[i], fontSize = 10.sp, color = Color(0xFFEA2A33), fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                                    Text(skillCategories[i], fontSize = 10.sp, color = Color(0xFFEA2A33), fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
                                 }
                                 Text("4.${7 + i % 3}", fontSize = 12.sp, color = Color(0xFFF59E0B), fontWeight = FontWeight.SemiBold)
                                 if (isEnrolled) {
@@ -467,7 +484,7 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(coursePrices[i], fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), fontSize = 16.sp)
+                            Text(skillPrices[i], fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33), fontSize = 16.sp)
                         }
                     }
                 }
@@ -490,7 +507,7 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(sessionTitles[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
-                            Text("${sessionDates[i]} * ${sessionTimes[i]}", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+                            Text("${sessionDates[i]} \u2022 ${sessionTimes[i]} \u2022 ${sessionDurations[i]}", fontSize = 12.sp, color = Color(0xFF9CA3AF))
                         }
                         Surface(color = Color(0xFF10B981).copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp)) {
                             Text("Upcoming", fontSize = 11.sp, color = Color(0xFF10B981), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
@@ -504,16 +521,25 @@ fun StudentLearnTab(ctx: android.content.Context, enrolled: List<String>, onView
 
 // ======================== BIDS TAB ========================
 @Composable
-fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
+fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit, userBids: List<StudentBid>) {
+    val allBids = userBids.ifEmpty {
+        listOf(
+            StudentBid("UI/UX Design Mastery", "35", "40"),
+            StudentBid("Kotlin Development", "45", "55"),
+            StudentBid("Brand Strategy Essentials", "60", "70")
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 Column {
                     Text("My Bids", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
-                    Text("3 pending bids", fontSize = 13.sp, color = Color(0xFF9CA3AF))
+                    Text("${allBids.size} bid${if (allBids.size != 1) "s" else ""}", fontSize = 13.sp, color = Color(0xFF9CA3AF))
                 }
             }
-            items(3) { i ->
+            items(allBids.size) { i ->
+                val bid = allBids[i]
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -531,18 +557,18 @@ fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column {
-                                    Text("Bid on Course ${i + 1}", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
-                                    Text("Design Fundamentals", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+                                    Text("Bid on Skill", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
+                                    Text(bid.skillName, fontSize = 12.sp, color = Color(0xFF9CA3AF), maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
                             Surface(color = Color(0xFFF59E0B).copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)) {
-                                Text("Pending", fontSize = 11.sp, color = Color(0xFFF59E0B), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                                Text(bid.status, fontSize = 11.sp, color = Color(0xFFF59E0B), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
                             }
                         }
                         Spacer(Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFF9FAFB), RoundedCornerShape(10.dp)).padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column { Text("Your Bid", fontSize = 10.sp, color = Color(0xFF9CA3AF)); Text("Rs ${35 + i * 5}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
-                            Column(horizontalAlignment = Alignment.End) { Text("Original", fontSize = 10.sp, color = Color(0xFF9CA3AF)); Text("Rs ${45 + i * 5}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
+                            Column { Text("Your Bid", fontSize = 10.sp, color = Color(0xFF9CA3AF)); Text("Rs ${bid.bidPrice}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA2A33)) }
+                            Column(horizontalAlignment = Alignment.End) { Text("Original", fontSize = 10.sp, color = Color(0xFF9CA3AF)); Text("Rs ${bid.originalPrice}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
                         }
                     }
                 }
@@ -596,7 +622,7 @@ fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String
             }
         }
         item { Text("Recent Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val txLabels = listOf("Added Funds", "Course Purchase", "Referral Bonus", "Course Fee")
+        val txLabels = listOf("Added Funds", "Skill Enrollment", "Referral Bonus", "Skill Fee")
         val txAmounts = listOf("+Rs 50.00", "-Rs 40.00", "+Rs 25.00", "-Rs 55.00")
         val txColors = listOf(Color(0xFF10B981), Color(0xFFEF4444), Color(0xFF10B981), Color(0xFFEF4444))
         val txIcons = listOf(Icons.Default.Add, Icons.Default.School, Icons.Default.CardGiftcard, Icons.Default.TrendingDown)
@@ -674,7 +700,7 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
         Spacer(Modifier.height(8.dp))
         var method by remember { mutableStateOf("card") }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("card" to "Credit Card", "paypal" to "PayPal", "bank" to "Bank").forEach { (key, label) ->
+            listOf("card" to "Credit Card", "esewa" to "eSewa", "bank" to "Bank").forEach { (key, label) ->
                 Button(
                     onClick = { method = key },
                     modifier = Modifier.weight(1f).height(46.dp),
@@ -698,19 +724,21 @@ fun StudentAddCreditsScreen(currentBalance: Double, onBack: () -> Unit, onAddCre
     }
 }
 
-// ======================== COURSE DETAILS ========================
+// ======================== SKILL DETAILS ========================
 @Composable
 fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () -> Unit, onEnroll: () -> Unit, onWatchVideo: () -> Unit) {
-    val names = listOf("Advanced UI/UX Design", "Kotlin for Android", "Brand Strategy 101", "Mobile Photography")
+    val names = listOf("UI/UX Design Mastery", "Kotlin Development", "Brand Strategy Essentials", "Mobile Photography")
     val prices = listOf("Rs 40", "Rs 55", "Rs 70", "Rs 85")
-    val name = names.getOrElse(courseIndex) { "Course" }
+    val durations = listOf("2 hours", "3 hours", "1.5 hours", "2 hours")
+    val name = names.getOrElse(courseIndex) { "Skill" }
     val price = prices.getOrElse(courseIndex) { "Rs 50" }
+    val duration = durations.getOrElse(courseIndex) { "2 hours" }
 
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF374151)) }
-                Text("Course Details", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+                Text("Skill Details", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
             }
         }
         item {
@@ -743,9 +771,9 @@ fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () 
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text("Course Info", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827))
+                    Text("Skill Info", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827))
                     Spacer(Modifier.height(12.dp))
-                    listOf("Duration:" to "8 weeks", "Level:" to "Intermediate", "Students:" to "1,240 enrolled", "Price:" to price).forEach { (k, v) ->
+                    listOf("Duration:" to duration, "Level:" to "Intermediate", "Learners:" to "1,240 enrolled", "Price:" to price).forEach { (k, v) ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(k, fontSize = 13.sp, color = Color(0xFF6B7280))
                             Text(v, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = if (k == "Price:") Color(0xFFEA2A33) else Color(0xFF111827))
@@ -786,7 +814,7 @@ fun StudentCourseDetailScreen(courseIndex: Int, isEnrolled: Boolean, onBack: () 
                 Button(onClick = onWatchVideo, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(14.dp)) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Watch Course", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("Watch Lesson", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             } else {
                 Button(onClick = onEnroll, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(14.dp)) {
@@ -817,7 +845,7 @@ fun StudentVideoPlayerScreen(onBack: () -> Unit) {
                     Icon(Icons.Default.PlayCircle, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(56.dp))
                 }
                 Spacer(Modifier.height(16.dp))
-                Text("Advanced UI/UX Design", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("UI/UX Design Mastery", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
                 Text("Video content would load here", color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp)
             }
@@ -835,7 +863,7 @@ fun StudentVideoPlayerScreen(onBack: () -> Unit) {
             IconButton(onClick = {}) { Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White) }
         }
         Column(modifier = Modifier.fillMaxWidth().background(Color(0xFF1A1A1A)).padding(16.dp)) {
-            Text("Advanced UI/UX Design", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text("UI/UX Design Mastery", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             Text("Lesson 1 of 12", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
         }
     }
@@ -844,8 +872,8 @@ fun StudentVideoPlayerScreen(onBack: () -> Unit) {
 // ======================== MAKE BID ========================
 @Composable
 fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit) {
-    val courses = listOf("Advanced UI/UX Design (Rs 40)", "Kotlin for Android (Rs 55)", "Brand Strategy 101 (Rs 70)", "Mobile Photography (Rs 85)")
-    var selectedCourse by remember { mutableStateOf(courses[0]) }
+    val skills = listOf("UI/UX Design Mastery (Rs 40)", "Kotlin Development (Rs 55)", "Brand Strategy Essentials (Rs 70)", "Mobile Photography (Rs 85)")
+    var selectedSkill by remember { mutableStateOf(skills[0]) }
     var bidPrice by remember { mutableStateOf(30f) }
     var expanded by remember { mutableStateOf(false) }
 
@@ -855,11 +883,11 @@ fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit)
             Text("Make a Bid", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
         }
         Spacer(Modifier.height(20.dp))
-        Text("Select Course", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF374151))
+        Text("Select Skill", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF374151))
         Spacer(Modifier.height(8.dp))
         Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text(selectedCourse, modifier = Modifier.weight(1f), textAlign = TextAlign.Start, fontSize = 12.sp); Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { courses.forEach { c -> DropdownMenuItem(text = { Text(c, fontSize = 12.sp) }, onClick = { selectedCourse = c; expanded = false }) } }
+            OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text(selectedSkill, modifier = Modifier.weight(1f), textAlign = TextAlign.Start, fontSize = 12.sp); Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { skills.forEach { s -> DropdownMenuItem(text = { Text(s, fontSize = 12.sp) }, onClick = { selectedSkill = s; expanded = false }) } }
         }
         Spacer(Modifier.height(24.dp))
         Text("Your Bid Price", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF374151))
@@ -888,7 +916,7 @@ fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit)
             }
         }
         Spacer(Modifier.height(28.dp))
-        Button(onClick = { onSubmit(selectedCourse, "${"%.0f".format(bidPrice)}") }, modifier = Modifier.fillMaxWidth().height(54.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(14.dp)) {
+        Button(onClick = { onSubmit(selectedSkill, "${"%.0f".format(bidPrice)}") }, modifier = Modifier.fillMaxWidth().height(54.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA2A33)), shape = RoundedCornerShape(14.dp)) {
             Text("Submit Bid", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
         Spacer(Modifier.height(10.dp))
@@ -924,7 +952,7 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             }
         }
         item { Text("Spending Summary", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val summaryLabels = listOf("Spent on Courses", "Referral Earnings", "Total Added")
+        val summaryLabels = listOf("Spent on Skills", "Referral Earnings", "Total Added")
         val summaryValues = listOf("Rs 250.00", "Rs 125.00", "Rs ${"%.2f".format(balance + 250 - 125)}")
         val summaryIcons = listOf(Icons.Default.School, Icons.Default.CardGiftcard, Icons.Default.AccountBalanceWallet)
         val summaryColors = listOf(Color(0xFFEF4444), Color(0xFF10B981), Color(0xFF3B82F6))
@@ -944,7 +972,7 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             }
         }
         item { Text("Transaction History", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val txLabels = listOf("Added Rs 100", "Purchased Course", "Referral Bonus", "Added Rs 50", "Course Fee")
+        val txLabels = listOf("Added Rs 100", "Enrolled in Skill", "Referral Bonus", "Added Rs 50", "Skill Fee")
         val txAmounts = listOf("+Rs 100.00", "-Rs 40.00", "+Rs 25.00", "+Rs 50.00", "-Rs 55.00")
         val txColors = listOf(Color(0xFF10B981), Color(0xFFEF4444), Color(0xFF10B981), Color(0xFF10B981), Color(0xFFEF4444))
         items(txLabels.size) { i ->
