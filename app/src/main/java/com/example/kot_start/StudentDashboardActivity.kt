@@ -48,6 +48,7 @@ class StudentDashboardActivity : ComponentActivity() {
 
 data class EnrolledCourse(val name: String, val price: String)
 data class StudentBid(val skillName: String, val bidPrice: String, val originalPrice: String, val status: String = "Pending")
+data class WalletTransaction(val label: String, val amount: Double, val isCredit: Boolean)
 
 @Composable
 fun StudentApp() {
@@ -58,7 +59,9 @@ fun StudentApp() {
     val enrolledCourses = remember { mutableStateListOf<String>() }
     val studentBids = remember { mutableStateListOf<StudentBid>() }
     var viewingCourseIndex by remember { mutableStateOf(0) }
+    val transactions = remember { mutableStateListOf<WalletTransaction>() }
 
+    val skillNames = listOf("UI/UX Design Mastery", "Kotlin Development", "Brand Strategy Essentials", "Mobile Photography")
     val skillPrices = listOf(40.0, 55.0, 70.0, 85.0)
 
     BackHandler {
@@ -77,6 +80,7 @@ fun StudentApp() {
             walletBalance = walletBalance,
             enrolledCourses = enrolledCourses,
             studentBids = studentBids,
+            transactions = transactions,
             onViewCourse = { idx -> viewingCourseIndex = idx; currentScreen = "course_details" },
             onLogout = {
                 Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
@@ -91,6 +95,7 @@ fun StudentApp() {
             onBack = { currentScreen = "main" },
             onAddCredits = { amount ->
                 walletBalance += amount
+                transactions.add(0, WalletTransaction("Added Funds", amount, true))
                 Toast.makeText(context, "Rs ${"%.2f".format(amount)} added to wallet!", Toast.LENGTH_SHORT).show()
                 currentScreen = "main"
             }
@@ -104,6 +109,8 @@ fun StudentApp() {
                 if (walletBalance >= price) {
                     enrolledCourses.add("course_$viewingCourseIndex")
                     walletBalance -= price
+                    val courseName = skillNames.getOrElse(viewingCourseIndex) { "Skill" }
+                    transactions.add(0, WalletTransaction("Enrolled: $courseName", price, false))
                     Toast.makeText(context, "Enrolled! Rs ${"%.0f".format(price)} deducted from wallet.", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, "Insufficient balance! Please add credits.", Toast.LENGTH_SHORT).show()
@@ -124,6 +131,7 @@ fun StudentApp() {
         )
         "wallet_details" -> StudentWalletDetailScreen(
             balance = walletBalance,
+            transactions = transactions,
             onBack = { currentScreen = "main" },
             onAddCredits = { currentScreen = "add_credits" }
         )
@@ -141,6 +149,7 @@ fun StudentMainScreen(
     walletBalance: Double,
     enrolledCourses: List<String>,
     studentBids: List<StudentBid>,
+    transactions: List<WalletTransaction>,
     onViewCourse: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -198,7 +207,7 @@ fun StudentMainScreen(
                 0 -> StudentHomeTab(LocalContext.current, walletBalance, onScreenChange)
                 1 -> StudentLearnTab(LocalContext.current, enrolledCourses, onViewCourse)
                 2 -> StudentBidsTab(LocalContext.current, onScreenChange, studentBids)
-                else -> StudentWalletTab(LocalContext.current, walletBalance, onScreenChange)
+                else -> StudentWalletTab(LocalContext.current, walletBalance, onScreenChange, transactions)
             }
         }
     }
@@ -601,7 +610,7 @@ fun StudentBidsTab(ctx: android.content.Context, nav: (String) -> Unit, userBids
 
 // ======================== WALLET TAB ========================
 @Composable
-fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String) -> Unit) {
+fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String) -> Unit, transactions: List<WalletTransaction>) {
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Text("Wallet & Credits", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
         item {
@@ -637,20 +646,48 @@ fun StudentWalletTab(ctx: android.content.Context, balance: Double, nav: (String
         item {
             Text("Recent Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827))
         }
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+        if (transactions.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
-                    Spacer(Modifier.height(8.dp))
-                    Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
-                    Text("Add credits to get started", fontSize = 12.sp, color = Color(0xFFD1D5DB))
+                    Column(
+                        modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
+                        Text("Add credits to get started", fontSize = 12.sp, color = Color(0xFFD1D5DB))
+                    }
+                }
+            }
+        } else {
+            items(transactions.size) { i ->
+                val tx = transactions[i]
+                val txColor = if (tx.isCredit) Color(0xFF10B981) else Color(0xFFEF4444)
+                val txIcon = if (tx.isCredit) Icons.Default.Add else Icons.Default.School
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(14.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(42.dp).background(txColor.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(txIcon, contentDescription = null, tint = txColor, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(tx.label, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
+                        }
+                        Text(if (tx.isCredit) "+Rs ${"%.2f".format(tx.amount)}" else "-Rs ${"%.2f".format(tx.amount)}", fontWeight = FontWeight.Bold, color = txColor, fontSize = 14.sp)
+                    }
                 }
             }
         }
@@ -932,7 +969,7 @@ fun StudentMakeBidScreen(onBack: () -> Unit, onSubmit: (String, String) -> Unit)
 
 // ======================== WALLET DETAILS ========================
 @Composable
-fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits: () -> Unit) {
+fun StudentWalletDetailScreen(balance: Double, transactions: List<WalletTransaction>, onBack: () -> Unit, onAddCredits: () -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -957,8 +994,10 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             }
         }
         item { Text("Spending Summary", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
+        val totalSpent = transactions.filter { !it.isCredit }.sumOf { it.amount }
+        val totalAdded = transactions.filter { it.isCredit }.sumOf { it.amount }
         val summaryLabels = listOf("Spent on Skills", "Referral Earnings", "Total Added")
-        val summaryValues = listOf("Rs 250.00", "Rs 125.00", "Rs ${"%.2f".format(balance + 250 - 125)}")
+        val summaryValues = listOf("Rs ${"%.2f".format(totalSpent)}", "Rs 0.00", "Rs ${"%.2f".format(totalAdded)}")
         val summaryIcons = listOf(Icons.Default.School, Icons.Default.CardGiftcard, Icons.Default.AccountBalanceWallet)
         val summaryColors = listOf(Color(0xFFEF4444), Color(0xFF10B981), Color(0xFF3B82F6))
         items(summaryLabels.size) { i ->
@@ -977,15 +1016,37 @@ fun StudentWalletDetailScreen(balance: Double, onBack: () -> Unit, onAddCredits:
             }
         }
         item { Text("Transaction History", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        item {
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
-                Column(
-                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
-                    Spacer(Modifier.height(8.dp))
-                    Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
+        if (transactions.isEmpty()) {
+            item {
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
+                    Column(
+                        modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
+                    }
+                }
+            }
+        } else {
+            items(transactions.size) { i ->
+                val tx = transactions[i]
+                val txColor = if (tx.isCredit) Color(0xFF10B981) else Color(0xFFEF4444)
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(36.dp).background(txColor.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(if (tx.isCredit) Icons.Default.TrendingUp else Icons.Default.TrendingDown, contentDescription = null, tint = txColor, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(tx.label, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF111827))
+                        }
+                        Text(if (tx.isCredit) "+Rs ${"%.2f".format(tx.amount)}" else "-Rs ${"%.2f".format(tx.amount)}", fontWeight = FontWeight.Bold, color = txColor, fontSize = 13.sp)
+                    }
                 }
             }
         }

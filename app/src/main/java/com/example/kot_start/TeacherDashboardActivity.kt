@@ -46,6 +46,7 @@ class TeacherDashboardActivity : ComponentActivity() {
 
 data class TeacherContent(val title: String, val description: String, val category: String, val price: String, val isPaid: Boolean)
 data class TeacherSession(val title: String, val date: String, val time: String, val duration: String)
+data class TeacherTransaction(val label: String, val amount: Double, val method: String)
 
 @Composable
 fun TeacherApp() {
@@ -54,6 +55,8 @@ fun TeacherApp() {
     val context = LocalContext.current
     val uploadedContent = remember { mutableStateListOf<TeacherContent>() }
     val scheduledSessions = remember { mutableStateListOf<TeacherSession>() }
+    var teacherBalance by remember { mutableStateOf(4280.50) }
+    val teacherTransactions = remember { mutableStateListOf<TeacherTransaction>() }
 
     BackHandler {
         when (currentScreen) {
@@ -69,6 +72,8 @@ fun TeacherApp() {
             onTabChange = { selectedTab = it },
             uploadedContent = uploadedContent,
             scheduledSessions = scheduledSessions,
+            teacherBalance = teacherBalance,
+            teacherTransactions = teacherTransactions,
             onLogout = {
                 Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
                 val intent = Intent(context, SkillitLoginActivity::class.java)
@@ -94,10 +99,13 @@ fun TeacherApp() {
             }
         )
         "bid_details" -> TeacherBidDetailsScreen(onBack = { currentScreen = "main"; selectedTab = 2 })
-        "earnings_details" -> TeacherEarningsDetailsScreen(onBack = { currentScreen = "main"; selectedTab = 3 })
+        "earnings_details" -> TeacherEarningsDetailsScreen(balance = teacherBalance, onBack = { currentScreen = "main"; selectedTab = 3 })
         "withdraw" -> TeacherWithdrawScreen(
+            currentBalance = teacherBalance,
             onBack = { currentScreen = "main"; selectedTab = 3 },
             onWithdraw = { amount, method ->
+                teacherBalance -= amount
+                teacherTransactions.add(0, TeacherTransaction("Withdrawn via $method", amount, method))
                 Toast.makeText(context, "Rs ${"%.2f".format(amount)} withdrawn via $method!", Toast.LENGTH_SHORT).show()
                 currentScreen = "main"; selectedTab = 3
             }
@@ -114,6 +122,8 @@ fun TeacherDashboardScreen(
     onTabChange: (Int) -> Unit,
     uploadedContent: List<TeacherContent>,
     scheduledSessions: List<TeacherSession>,
+    teacherBalance: Double,
+    teacherTransactions: List<TeacherTransaction>,
     onLogout: () -> Unit
 ) {
     val tabs = listOf("Home", "Learning", "Bids", "Earnings")
@@ -168,10 +178,10 @@ fun TeacherDashboardScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> TeacherHomeTab(LocalContext.current, onScreenChange)
+                0 -> TeacherHomeTab(LocalContext.current, onScreenChange, teacherBalance)
                 1 -> TeacherLearningTab(LocalContext.current, onScreenChange, uploadedContent, scheduledSessions)
                 2 -> TeacherBidsTab(LocalContext.current, onScreenChange)
-                else -> TeacherEarningsTab(LocalContext.current, onScreenChange)
+                else -> TeacherEarningsTab(LocalContext.current, onScreenChange, teacherBalance, teacherTransactions)
             }
         }
     }
@@ -179,7 +189,7 @@ fun TeacherDashboardScreen(
 
 // ======================== HOME TAB ========================
 @Composable
-fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
+fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit, balance: Double) {
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val greeting = when {
         hour < 12 -> "Good morning"
@@ -225,7 +235,7 @@ fun TeacherHomeTab(ctx: android.content.Context, nav: (String) -> Unit) {
                             Spacer(Modifier.width(8.dp))
                             Text("Total Earnings", fontSize = 13.sp, color = Color.White.copy(alpha = 0.9f))
                         }
-                        Text("Rs 4,280.50", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Rs ${"%.2f".format(balance)}", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Button(
                             onClick = { nav("withdraw") },
                             modifier = Modifier.fillMaxWidth(),
@@ -635,7 +645,7 @@ fun TeacherBidsTab(ctx: android.content.Context, nav: (String) -> Unit) {
 
 // ======================== EARNINGS TAB ========================
 @Composable
-fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
+fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit, balance: Double, teacherTransactions: List<TeacherTransaction>) {
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Text("Wallet & Earnings", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)) }
         item {
@@ -651,7 +661,7 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("Total Available Balance", fontSize = 13.sp, color = Color.White.copy(alpha = 0.9f))
-                        Text("Rs 4,280.50", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Rs ${"%.2f".format(balance)}", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(onClick = { nav("withdraw") }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.White), shape = RoundedCornerShape(10.dp)) {
                                 Icon(Icons.Default.Payment, contentDescription = null, tint = Color(0xFFEA2A33), modifier = Modifier.size(16.dp))
@@ -669,29 +679,45 @@ fun TeacherEarningsTab(ctx: android.content.Context, nav: (String) -> Unit) {
             }
         }
         item { Text("Recent Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF111827)) }
-        val txLabels = listOf("Withdrawal", "Skill Sale", "Session Fee")
-        val txAmounts = listOf("100.00", "200.00", "300.00")
-        val txIcons = listOf(Icons.Default.AccountBalanceWallet, Icons.Default.MenuBook, Icons.Default.TrendingUp)
-        val txColors = listOf(Color(0xFFEF4444), Color(0xFF10B981), Color(0xFF10B981))
-        items(txLabels.size) { i ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(14.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(42.dp),
-                        contentAlignment = Alignment.Center
+        if (teacherTransactions.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(txIcons[i], contentDescription = null, tint = txColors[i], modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Receipt, contentDescription = null, tint = Color(0xFFD1D5DB), modifier = Modifier.size(40.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("No transactions yet", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF6B7280))
                     }
-                    Spacer(Modifier.width(14.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(txLabels[i], fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
+                }
+            }
+        } else {
+            items(teacherTransactions.size) { i ->
+                val tx = teacherTransactions[i]
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(14.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(42.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(tx.label, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF111827))
+                        }
+                        Text("-Rs ${"%.2f".format(tx.amount)}", fontWeight = FontWeight.Bold, color = Color(0xFFEF4444), fontSize = 14.sp)
                     }
-                    Text(if (i == 0) "-Rs ${txAmounts[i]}" else "+Rs ${txAmounts[i]}", fontWeight = FontWeight.Bold, color = txColors[i], fontSize = 14.sp)
                 }
             }
         }
@@ -874,7 +900,7 @@ fun TeacherBidDetailsScreen(onBack: () -> Unit) {
 
 // ======================== EARNINGS DETAILS ========================
 @Composable
-fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
+fun TeacherEarningsDetailsScreen(balance: Double, onBack: () -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -887,7 +913,7 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
                 Box(modifier = Modifier.fillMaxWidth().background(Brush.horizontalGradient(listOf(Color(0xFFE63946), Color(0xFFFF6B6B)))).padding(24.dp)) {
                     Column {
                         Text("Total Balance", fontSize = 13.sp, color = Color.White.copy(alpha = 0.9f))
-                        Text("Rs 4,280.50", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Rs ${"%.2f".format(balance)}", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Spacer(Modifier.height(6.dp))
                         Text("Last Updated: Today at 2:30 PM", fontSize = 11.sp, color = Color.White.copy(alpha = 0.7f))
                     }
@@ -924,12 +950,12 @@ fun TeacherEarningsDetailsScreen(onBack: () -> Unit) {
 
 // ======================== WITHDRAW SCREEN ========================
 @Composable
-fun TeacherWithdrawScreen(onBack: () -> Unit, onWithdraw: (Double, String) -> Unit) {
+fun TeacherWithdrawScreen(currentBalance: Double, onBack: () -> Unit, onWithdraw: (Double, String) -> Unit) {
     var selectedAmount by remember { mutableStateOf(0.0) }
     var customAmount by remember { mutableStateOf("") }
     var method by remember { mutableStateOf("esewa") }
     val presets = listOf(50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
-    val totalBalance = 4280.50
+    val totalBalance = currentBalance
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)).padding(16.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
