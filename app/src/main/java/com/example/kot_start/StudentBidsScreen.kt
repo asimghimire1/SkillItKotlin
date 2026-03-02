@@ -230,10 +230,10 @@ fun ActiveBidCard(
 ) {
     // Theme colors for card backgrounds
     val themeColors = listOf(
-        Color(0xFFEA2A33),      // Red
-        Color(0xFFFFCDD2),       // Light Red
-        Color(0xFFF48FB1),       // Pink
-        Color(0xFFFCE4EC)        // Light Pink
+        Color(0xFFEA2A33),
+        Color(0xFFFFCDD2),
+        Color(0xFFF48FB1),
+        Color(0xFFFCE4EC)
     )
     
     val selectedColor = themeColors[(bid.bidId.hashCode() % themeColors.size).let { if (it < 0) -it else it }]
