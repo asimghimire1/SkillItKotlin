@@ -24,17 +24,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -48,6 +54,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -63,8 +71,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import com.example.kot_start.repository.UserRepoImpl
 import com.example.kot_start.viewmodel.UserViewModel
 
@@ -87,24 +93,49 @@ fun SkillitLoginBody() {
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
     var passwordVisibility by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
     val sharedPreferences = context.getSharedPreferences("User", MODE_PRIVATE)
     val activity = context as Activity
 
-    Scaffold { padding ->
-
+    Scaffold { _ ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFE8E8E8)),
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFE63946),
+                            Color(0xFFD62839),
+                            Color(0xFFBF1A2F)
+                        )
+                    )
+                ),
             contentAlignment = Alignment.Center
         ) {
+            // Decorative circles for modern look
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .align(Alignment.TopEnd)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.06f))
+            )
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .align(Alignment.BottomStart)
+                    .padding(bottom = 40.dp, start = 10.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.06f))
+            )
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
-                shape = RoundedCornerShape(24.dp),
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -114,52 +145,60 @@ fun SkillitLoginBody() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // App Logo
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(Color(0xFFE63946), RoundedCornerShape(20.dp)),
-                        contentAlignment = Alignment.Center
+                    Card(
+                        modifier = Modifier.size(80.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE63946)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.logo),
-                            contentDescription = "Skillit Logo",
-                            modifier = Modifier.size(50.dp)
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.logo),
+                                contentDescription = "Skillit Logo",
+                                modifier = Modifier.size(50.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
                         "Skillit",
                         style = TextStyle(
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF1A1A2E),
+                            letterSpacing = (-0.5).sp
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         "Explore skilled content and sessions",
                         style = TextStyle(
-                            fontSize = 16.sp,
-                            color = Color.Gray
+                            fontSize = 14.sp,
+                            color = Color(0xFF9CA3AF),
+                            letterSpacing = 0.2.sp
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                    // Email
+                    // Email label
                     Text(
-                        "Email",
+                        "EMAIL",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 8.dp),
                         style = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = Color(0xFF6B7280),
+                            letterSpacing = 1.sp
                         )
                     )
 
@@ -167,30 +206,35 @@ fun SkillitLoginBody() {
                         value = email,
                         onValueChange = { email = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("user@example.com", color = Color.LightGray) },
+                        placeholder = { Text("user@example.com", color = Color(0xFFD1D5DB)) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(20.dp))
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFF5F5F5),
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                            focusedIndicatorColor = Color(0xFFE0E0E0),
-                            unfocusedIndicatorColor = Color(0xFFE0E0E0)
+                            focusedContainerColor = Color(0xFFF9FAFB),
+                            unfocusedContainerColor = Color(0xFFF9FAFB),
+                            focusedIndicatorColor = Color(0xFFE63946),
+                            unfocusedIndicatorColor = Color(0xFFE5E7EB),
+                            cursorColor = Color(0xFFE63946)
                         ),
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Password
+                    // Password label
                     Text(
-                        "Password",
+                        "PASSWORD",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 8.dp),
                         style = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = Color(0xFF6B7280),
+                            letterSpacing = 1.sp
                         )
                     )
 
@@ -198,37 +242,36 @@ fun SkillitLoginBody() {
                         value = password,
                         onValueChange = { password = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Enter password", color = Color.LightGray) },
-                        visualTransformation = if (passwordVisibility)
-                            VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
+                        placeholder = { Text("Enter password", color = Color(0xFFD1D5DB)) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(20.dp))
+                        },
+                        visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFF5F5F5),
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                            focusedIndicatorColor = Color(0xFFE0E0E0),
-                            unfocusedIndicatorColor = Color(0xFFE0E0E0)
+                            focusedContainerColor = Color(0xFFF9FAFB),
+                            unfocusedContainerColor = Color(0xFFF9FAFB),
+                            focusedIndicatorColor = Color(0xFFE63946),
+                            unfocusedIndicatorColor = Color(0xFFE5E7EB),
+                            cursorColor = Color(0xFFE63946)
                         ),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
                                 Icon(
-                                    painter = if (passwordVisibility)
-                                        painterResource(R.drawable.baseline_visibility_24)
-                                    else
-                                        painterResource(R.drawable.baseline_visibility_off_24),
+                                    if (passwordVisibility) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                     contentDescription = "Toggle password visibility",
-                                    tint = Color.Gray
+                                    tint = Color(0xFF9CA3AF),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         },
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Remember Me & Forgot Password
+                    // Remember Me / Forgot Password
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -240,16 +283,13 @@ fun SkillitLoginBody() {
                                 onCheckedChange = { rememberMe = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color.LightGray,
+                                    checkedTrackColor = Color(0xFFE63946),
                                     uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = Color.LightGray
+                                    uncheckedTrackColor = Color(0xFFE5E7EB)
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "Remember me",
-                                style = TextStyle(fontSize = 14.sp, color = Color.DarkGray)
-                            )
+                            Text("Remember me", style = TextStyle(fontSize = 13.sp, color = Color(0xFF6B7280)))
                         }
 
                         Text(
@@ -258,29 +298,25 @@ fun SkillitLoginBody() {
                                 val intent = Intent(context, ForgotPasswordActivity::class.java)
                                 context.startActivity(intent)
                             },
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                color = Color.DarkGray,
-                                fontWeight = FontWeight.Medium
-                            )
+                            style = TextStyle(fontSize = 13.sp, color = Color(0xFFE63946), fontWeight = FontWeight.SemiBold)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Login Button
+                    // Login Button with loading spinner
                     Button(
                         onClick = {
                             if (email.isEmpty() || password.isEmpty()) {
                                 Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                             } else {
+                                isLoading = true
                                 userViewModel.login(email, password) { success, msg ->
                                     if (success) {
-                                        // Get current user's ID
                                         val currentUserId = userViewModel.getCurrentUser()?.uid
                                         if (currentUserId != null) {
-                                            // Fetch user role from database
                                             userViewModel.getUserRole(currentUserId) { roleSuccess, roleMsg, userRole ->
+                                                isLoading = false
                                                 if (roleSuccess && userRole != null) {
                                                     if (rememberMe) {
                                                         val editor = sharedPreferences.edit()
@@ -289,8 +325,6 @@ fun SkillitLoginBody() {
                                                         editor.apply()
                                                     }
                                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                                    
-                                                    // Redirect based on role
                                                     val intent = if (userRole == "Teacher") {
                                                         Intent(context, TeacherDashboardActivity::class.java)
                                                     } else {
@@ -299,7 +333,6 @@ fun SkillitLoginBody() {
                                                     context.startActivity(intent)
                                                     activity.finish()
                                                 } else {
-                                                    // Default to StudentDashboard if role fetch fails
                                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                                     val intent = Intent(context, StudentDashboardActivity::class.java)
                                                     context.startActivity(intent)
@@ -307,9 +340,11 @@ fun SkillitLoginBody() {
                                                 }
                                             }
                                         } else {
+                                            isLoading = false
                                             Toast.makeText(context, "Unable to get user ID", Toast.LENGTH_SHORT).show()
                                         }
                                     } else {
+                                        isLoading = false
                                         val errorMsg = when {
                                             msg.contains("password", ignoreCase = true) || msg.contains("credential", ignoreCase = true) -> "The password is incorrect"
                                             msg.contains("no user record", ignoreCase = true) || msg.contains("user may have been deleted", ignoreCase = true) -> "This email doesn't exist."
@@ -323,30 +358,27 @@ fun SkillitLoginBody() {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE63946)
-                        )
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE63946)),
+                        enabled = !isLoading
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                "Log in",
-                                style = TextStyle(
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                                Text("Log in", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
                     // Sign Up Link
                     Text(
@@ -359,16 +391,10 @@ fun SkillitLoginBody() {
                             },
                         textAlign = TextAlign.Center,
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(color = Color.Gray, fontSize = 15.sp)) {
+                            withStyle(SpanStyle(color = Color(0xFF9CA3AF), fontSize = 14.sp)) {
                                 append("New to Skillit? ")
                             }
-                            withStyle(
-                                SpanStyle(
-                                    color = Color(0xFFE63946),
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            ) {
+                            withStyle(SpanStyle(color = Color(0xFFE63946), fontSize = 14.sp, fontWeight = FontWeight.Bold)) {
                                 append("Join the community")
                             }
                         }
